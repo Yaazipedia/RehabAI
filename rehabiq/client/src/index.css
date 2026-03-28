@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --clr-primary: #0d7377;
+  --clr-primary-light: #e0f2f3;
+  --clr-primary-dark: #095456;
+  --clr-slate: #374151;
+  --clr-amber: #f59e0b;
+  --clr-amber-light: #fef3c7;
+  --clr-success: #059669;
+  --clr-success-light: #d1fae5;
+  --clr-warning: #d97706;
+  --clr-warning-light: #fff7ed;
+  --clr-danger: #e11d48;
+  --clr-danger-light: #ffe4e6;
+  --clr-bg: #f8fafb;
+  --clr-card: #ffffff;
+  --clr-border: #e5e7eb;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "DM Sans", system-ui, sans-serif;
+  background: var(--clr-bg);
+  color: var(--clr-slate);
+  -webkit-font-smoothing: antialiased;
+}
+
+code,
+.font-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Smooth transitions */
+.transition-base {
+  transition: all 0.2s ease;
+}
+
+/* Loading shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Pulse for risk badges */
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
