@@ -14,6 +14,20 @@ export async function fetchClient(clientId) {
   return data.client;
 }
 
+export async function createNewClient(clientData) {
+  const res = await fetch(`${API_BASE}/clients`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(clientData),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Failed to create client");
+  }
+  const data = await res.json();
+  return data.client;
+}
+
 export async function documentSession(clientId, rawNotes, sessionNumber) {
   const res = await fetch(`${API_BASE}/sessions/document`, {
     method: "POST",

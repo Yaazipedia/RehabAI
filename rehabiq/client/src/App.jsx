@@ -3,6 +3,7 @@ import Sidebar from "./components/Layout/Sidebar";
 import Dashboard from "./components/Dashboard/Dashboard";
 import SessionDoc from "./components/SessionDoc/SessionDoc";
 import ClientView from "./components/ClientView/ClientView";
+import NewClient from "./components/NewClient/NewClient";
 
 export default function App() {
   const [view, setView] = useState("dashboard");
@@ -15,15 +16,13 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar
-        currentView={view}
-        onNavigate={navigateTo}
-      />
+      <Sidebar currentView={view} onNavigate={navigateTo} />
       <main className="flex-1 overflow-y-auto">
         {view === "dashboard" && (
           <Dashboard
             onSelectClient={(id) => navigateTo("client", id)}
             onDocumentSession={(id) => navigateTo("session", id)}
+            onAddClient={() => navigateTo("newclient")}
           />
         )}
         {view === "session" && (
@@ -38,6 +37,12 @@ export default function App() {
             clientId={selectedClientId}
             onBack={() => navigateTo("dashboard")}
             onDocumentSession={(id) => navigateTo("session", id)}
+          />
+        )}
+        {view === "newclient" && (
+          <NewClient
+            onBack={() => navigateTo("dashboard")}
+            onClientCreated={(id) => navigateTo("client", id)}
           />
         )}
       </main>
