@@ -1,7 +1,6 @@
 // =============================================================
-// Prompt 3: Outcome & Intervention Effectiveness Analyzer
-// Analyzes the relationship between interventions used and
-// client progress indicators over time
+// Prompt 3: Outcome & Intervention Effectiveness Analyzer (v2)
+// Produces numeric scores and structured data for visual dashboard
 // =============================================================
 
 function buildOutcomesPrompt(clientProfile) {
@@ -9,95 +8,99 @@ function buildOutcomesPrompt(clientProfile) {
     .map(
       (s) => `
 SESSION ${s.sessionNumber} (${s.date}):
-Mood: ${s.tags.moodIndicators.join(", ")}
+Mood: ${(s.tags.moodIndicators || []).join(", ")}
 Sentiment: ${s.tags.sessionSentiment}
-Triggers Identified: ${s.tags.triggersIdentified.join(", ") || "None"}
-Coping Strategies Discussed: ${s.tags.copingStrategiesDiscussed.join(", ")}
-Support Network: ${s.tags.supportNetworkChanges}
-Objectives Addressed: ${s.tags.objectivesAddressed.join(", ")}
-Risk Indicators: ${s.tags.riskIndicators.join(", ") || "None"}
-Key Quotes: ${s.tags.keyQuotes.join(" | ")}
+Triggers: ${(s.tags.triggersIdentified || []).join(", ") || "None"}
+Coping: ${(s.tags.copingStrategiesDiscussed || []).join(", ")}
+Support: ${s.tags.supportNetworkChanges || "No changes"}
+Objectives Addressed: ${(s.tags.objectivesAddressed || []).join(", ")}
+Risk Indicators: ${(s.tags.riskIndicators || []).join(", ") || "None"}
 Assessment: ${s.dapNote.assessment}
 `
     )
     .join("\n---\n");
 
-  const systemPrompt = `You are a clinical outcomes analyst for substance abuse treatment. You analyze the longitudinal relationship between therapeutic interventions and client progress indicators.
+  const systemPrompt = `You are a clinical outcomes analyst for substance abuse treatment. You produce VISUAL DASHBOARD data — numeric scores, short labels, and trend indicators that can be displayed as progress bars and cards.
 
-CRITICAL RULES:
-- Correlation is NOT causation — frame all findings carefully with language like "data suggests" or "appears to correlate with"
-- NEVER say an intervention "failed" — use "limited response observed" or "consider alternatives"
-- Ground ALL recommendations in established evidence-based practices for SUD treatment (CBT, DBT, MI, ACT, SMART Recovery, 12-step facilitation, contingency management, etc.)
-- Acknowledge limitations of the data — small sample sizes, confounding variables
-- Include specific session numbers when citing evidence
-- Be clinically useful, not academically exhaustive
-- Include both what's working AND what might need adjustment
+RULES:
+- All scores are 0-100 integers
+- All trends must be one of: improving, stable, declining, mixed
+- Keep text extremely short — this is a dashboard, not a report
+- Effectiveness ratings: 0-30 = limited, 31-60 = partial, 61-80 = effective, 81-100 = highly effective
+- Ground recommendations in evidence-based practices
+- Correlation is not causation — frame carefully
+- Max 3 recommendations, max 3 interventions, max 3 supervision points
 
-You must respond in VALID JSON only. No markdown, no backticks, no preamble.`;
+Respond in VALID JSON only. No markdown, no backticks, no preamble.`;
 
-  const userPrompt = `Analyze the clinical outcomes and intervention effectiveness for this client.
+  const userPrompt = `Analyze clinical outcomes for this client and produce dashboard data.
 
-CLIENT PROFILE:
-- Name: ${clientProfile.name}
-- Age: ${clientProfile.age}
-- Diagnosis: ${clientProfile.diagnosis}
-- Co-occurring: ${clientProfile.coOccurring || "None documented"}
-- Program: ${clientProfile.programType}
-- Program Day: ${clientProfile.programDay}
-- MAT: ${clientProfile.mat || "None"}
-- Total Sessions Analyzed: ${clientProfile.sessions.length}
+CLIENT: ${clientProfile.name}, ${clientProfile.age}yo
+DIAGNOSIS: ${clientProfile.diagnosis}
+CO-OCCURRING: ${clientProfile.coOccurring || "None"}
+PROGRAM: ${clientProfile.programType} • Day ${clientProfile.programDay}
+SESSIONS ANALYZED: ${clientProfile.sessions.length}
 
-TREATMENT PLAN OBJECTIVES:
-${clientProfile.treatmentPlan.objectives
-  .map((o) => `- [${o.id}] [${o.status}] ${o.description}`)
+OBJECTIVES:
+${(clientProfile.treatmentPlan?.objectives || [])
+  .map((o) => `- [${o.id || "obj"}] [${o.status}] ${o.description}`)
   .join("\n")}
 
 SESSION HISTORY:
 ${sessionsContext}
 
-Generate the following JSON:
+Generate this JSON:
 {
-  "interventionEffectiveness": [
-    {
-      "intervention": "Name of the therapeutic technique/approach",
-      "sessionsUsed": [list of session numbers where it was used],
-      "progressIndicators": "What the data shows about client response",
-      "effectiveness": "effective | partially-effective | limited-response | too-early-to-assess",
-      "recommendation": "Continue, adjust, or consider alternatives — with clinical reasoning"
-    }
-  ],
-  "outcomeTrends": {
-    "triggerManagement": {
-      "trend": "improving | stable | worsening | mixed",
-      "evidence": "2-3 sentences with session references"
-    },
-    "supportNetwork": {
-      "trend": "growing | stable | shrinking | mixed",
-      "evidence": "2-3 sentences with session references"
-    },
-    "engagementLevel": {
-      "trend": "improving | stable | declining | mixed",
-      "evidence": "2-3 sentences with session references"
-    },
-    "copingCapacity": {
-      "trend": "expanding | stable | narrowing | mixed",
-      "evidence": "2-3 sentences with session references"
-    },
-    "overallTrajectory": {
-      "trend": "positive | stable | concerning | mixed",
-      "summary": "3-4 sentence overall clinical summary"
-    }
+  "overallScore": {
+    "score": 0-100,
+    "label": "One of: Critical | Needs Attention | Progressing | Strong Progress | Excellent",
+    "trend": "improving | stable | declining | mixed",
+    "summary": "One sentence overall assessment (max 20 words)"
   },
-  "evidenceBasedRecommendations": [
+  "domainScores": [
     {
-      "observation": "What pattern or issue was observed",
-      "recommendation": "Specific evidence-based intervention to consider",
-      "clinicalBasis": "Why this intervention — cite the evidence base",
-      "priority": "high | medium | low"
+      "domain": "Trigger management",
+      "score": 0-100,
+      "trend": "improving | stable | declining | mixed",
+      "detail": "One sentence (max 15 words)"
+    },
+    {
+      "domain": "Support network",
+      "score": 0-100,
+      "trend": "improving | stable | declining | mixed",
+      "detail": "One sentence (max 15 words)"
+    },
+    {
+      "domain": "Engagement",
+      "score": 0-100,
+      "trend": "improving | stable | declining | mixed",
+      "detail": "One sentence (max 15 words)"
+    },
+    {
+      "domain": "Coping capacity",
+      "score": 0-100,
+      "trend": "improving | stable | declining | mixed",
+      "detail": "One sentence (max 15 words)"
     }
   ],
-  "supervisionTalkingPoints": [
-    "2-3 items this counselor might want to discuss with their clinical supervisor. Frame constructively."
+  "interventions": [
+    {
+      "name": "Intervention name (max 5 words)",
+      "sessionsUsed": 0,
+      "effectivenessScore": 0-100,
+      "verdict": "effective | partially-effective | limited-response | too-early",
+      "recommendation": "One sentence: continue, adjust, or try alternative (max 15 words)"
+    }
+  ],
+  "topRecommendations": [
+    {
+      "priority": "high | medium",
+      "action": "Specific action (max 15 words)",
+      "basis": "Clinical basis (max 10 words)"
+    }
+  ],
+  "supervisionPoints": [
+    "Short point for supervisor discussion (max 15 words each)"
   ]
 }`;
 

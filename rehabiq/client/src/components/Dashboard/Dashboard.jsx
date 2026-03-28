@@ -19,97 +19,91 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
     low: clients.filter((c) => c.riskLevel === "low").length,
   };
 
-  if (loading) {
-    return (
-      <div className="p-8">
-        <div className="shimmer h-10 w-64 mb-3" />
-        <div className="shimmer h-5 w-48 mb-8" />
-        <div className="grid grid-cols-4 gap-4 mb-8">{[1,2,3,4].map((i) => <div key={i} className="shimmer h-28 rounded-2xl" />)}</div>
-        <div className="space-y-4">{[1,2,3].map((i) => <div key={i} className="shimmer h-36 rounded-2xl" />)}</div>
-      </div>
-    );
-  }
-
-  const statCards = [
-    { label: "Total clients", val: stats.total, color: "var(--clr-primary)", icon: "👥" },
-    { label: "High risk", val: stats.high, color: "var(--clr-danger)", icon: "⚠️" },
-    { label: "Moderate", val: stats.moderate, color: "var(--clr-warning)", icon: "📋" },
-    { label: "Low risk", val: stats.low, color: "var(--clr-success)", icon: "✅" },
-  ];
+  if (loading) return (
+    <div className="p-8 max-w-[1000px]">
+      <div className="shimmer h-10 w-64 mb-8" />
+      <div className="grid grid-cols-4 gap-4 mb-8">{[1,2,3,4].map(i => <div key={i} className="shimmer h-24 rounded-2xl" />)}</div>
+      <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="shimmer h-24 rounded-2xl" />)}</div>
+    </div>
+  );
 
   return (
-    <div className="p-8 max-w-[1100px]">
+    <div className="p-8 max-w-[1000px]">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-[26px] font-bold tracking-tight" style={{ color: "var(--clr-slate)" }}>Good morning, Dr. Rivera</h2>
-          <p className="text-[15px] mt-1" style={{ color: "var(--clr-muted)" }}>Here's your caseload overview for today</p>
+          <h2 className="text-2xl font-bold" style={{ color: "var(--clr-slate)" }}>Caseload overview</h2>
+          <p className="text-sm mt-1" style={{ color: "var(--clr-muted)" }}>{stats.total} active clients</p>
         </div>
         <button onClick={onAddClient} className="btn-primary flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add client
+          <span className="text-lg">+</span> Add client
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        {statCards.map((s, i) => (
-          <div key={i} className="card p-5 animate-fade-in" style={{ animationDelay: `${i*80}ms`, animationFillMode: "both" }}>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--clr-muted)" }}>{s.label}</p>
-              <span className="text-lg">{s.icon}</span>
-            </div>
-            <p className="text-[32px] font-bold leading-none" style={{ color: s.color }}>{s.val}</p>
+      <div className="grid grid-cols-4 gap-3 mb-8">
+        {[
+          { label: "Total", val: stats.total, color: "var(--clr-primary)", bg: "var(--clr-primary-light)" },
+          { label: "High risk", val: stats.high, color: "var(--clr-danger)", bg: "var(--clr-danger-light)" },
+          { label: "Moderate", val: stats.moderate, color: "var(--clr-warning)", bg: "var(--clr-warning-light)" },
+          { label: "Low risk", val: stats.low, color: "var(--clr-success)", bg: "var(--clr-success-light)" },
+        ].map((s, i) => (
+          <div key={i} className="rounded-xl p-4" style={{ background: s.bg }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: s.color, opacity: 0.7 }}>{s.label}</p>
+            <p className="text-[28px] font-bold leading-none" style={{ color: s.color }}>{s.val}</p>
           </div>
         ))}
       </div>
 
-      {/* Section label */}
-      <p className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--clr-muted)" }}>
-        Active caseload — sorted by risk
-      </p>
-
-      {/* Client cards */}
-      <div className="space-y-3">
+      {/* Client list */}
+      <div className="space-y-2.5">
         {sorted.map((client, idx) => (
-          <div key={client.id} className="card card-interactive p-5 animate-fade-in"
-            style={{ animationDelay: `${(idx+4)*60}ms`, animationFillMode: "both" }}
+          <div key={client.id}
+            className="card card-interactive p-4 flex items-center gap-4 animate-fade-in"
+            style={{ animationDelay: `${idx * 50}ms`, animationFillMode: "both" }}
             onClick={() => onSelectClient(client.id)}>
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                    style={{ background: client.riskLevel === "high" ? "linear-gradient(135deg, #dc2626, #ef4444)" : client.riskLevel === "moderate" ? "linear-gradient(135deg, #d97706, #f59e0b)" : "linear-gradient(135deg, #059669, #10b981)" }}>
-                    {client.name.split(" ").map((n) => n[0]).join("")}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-[15px] font-semibold" style={{ color: "var(--clr-slate)" }}>{client.name}</h3>
-                      <StatusBadge status={client.riskLevel} />
-                      <StatusBadge status={client.lastSessionSentiment} showIcon />
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[12px] mt-0.5 flex-wrap" style={{ color: "var(--clr-muted)" }}>
-                      <span>{client.age} yo</span><span style={{ opacity: 0.4 }}>•</span>
-                      <span>{client.diagnosis}</span><span style={{ opacity: 0.4 }}>•</span>
-                      <span>{client.programType}</span><span style={{ opacity: 0.4 }}>•</span>
-                      <span>Day {client.programDay}</span><span style={{ opacity: 0.4 }}>•</span>
-                      <span>{client.totalSessions} sessions</span>
-                    </div>
-                  </div>
-                </div>
-                {client.nextObjectiveAtRisk && (
-                  <div className="mt-3 flex items-center gap-2 text-[12px] px-3 py-2 rounded-lg ml-12"
-                    style={{ background: client.nextObjectiveAtRisk.status === "at-risk" ? "var(--clr-danger-light)" : "var(--clr-amber-light)", color: client.nextObjectiveAtRisk.status === "at-risk" ? "var(--clr-danger)" : "var(--clr-warning)", border: `1px solid ${client.nextObjectiveAtRisk.status === "at-risk" ? "var(--clr-danger-border)" : "var(--clr-amber-border)"}` }}>
-                    <span>{client.nextObjectiveAtRisk.status === "at-risk" ? "⚠" : "📊"}</span>
-                    <span className="font-semibold">{client.nextObjectiveAtRisk.status === "at-risk" ? "At risk" : "Plateau"}:</span>
-                    <span>{client.nextObjectiveAtRisk.description}</span>
-                  </div>
-                )}
+
+            {/* Avatar */}
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+              style={{
+                background: client.riskLevel === "high" ? "linear-gradient(135deg, #dc2626, #ef4444)"
+                  : client.riskLevel === "moderate" ? "linear-gradient(135deg, #d97706, #f59e0b)"
+                  : "linear-gradient(135deg, #059669, #10b981)"
+              }}>
+              {client.name.split(" ").map(n => n[0]).join("")}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <h3 className="text-[15px] font-semibold" style={{ color: "var(--clr-slate)" }}>{client.name}</h3>
+                <StatusBadge status={client.riskLevel} />
+                <StatusBadge status={client.lastSessionSentiment} showIcon />
               </div>
-              <div className="flex gap-2 ml-4 flex-shrink-0">
-                <button onClick={(e) => { e.stopPropagation(); onDocumentSession(client.id); }} className="btn-outline">Document session</button>
-                <button onClick={(e) => { e.stopPropagation(); onSelectClient(client.id); }} className="btn-primary" style={{ fontSize: "13px", padding: "8px 16px" }}>View details</button>
+              <p className="text-[12px] truncate" style={{ color: "var(--clr-muted)" }}>
+                {client.diagnosis} · Day {client.programDay} · {client.totalSessions} sessions
+              </p>
+            </div>
+
+            {/* Alert (if any) */}
+            {client.nextObjectiveAtRisk && (
+              <div className="text-[11px] px-2.5 py-1.5 rounded-lg flex-shrink-0 max-w-[250px] truncate"
+                style={{
+                  background: client.nextObjectiveAtRisk.status === "at-risk" ? "var(--clr-danger-light)" : "var(--clr-warning-light)",
+                  color: client.nextObjectiveAtRisk.status === "at-risk" ? "var(--clr-danger)" : "var(--clr-warning)",
+                }}>
+                ⚠ {client.nextObjectiveAtRisk.description}
               </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 flex-shrink-0">
+              <button onClick={(e) => { e.stopPropagation(); onDocumentSession(client.id); }} className="btn-outline" style={{ fontSize: 12, padding: "6px 12px" }}>
+                Document
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); onSelectClient(client.id); }} className="btn-primary" style={{ fontSize: 12, padding: "6px 12px" }}>
+                View
+              </button>
             </div>
           </div>
         ))}

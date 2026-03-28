@@ -15,217 +15,262 @@ export default function ClientView({ clientId, onBack, onDocumentSession }) {
   useEffect(() => {
     if (clientId) {
       fetchClient(clientId).then(setClient).catch(console.error);
-      setBriefing(null);
-      setOutcomes(null);
+      setBriefing(null); setOutcomes(null);
     }
   }, [clientId]);
 
-  function loadBriefing() {
-    if (briefing) return;
-    setLoadingBriefing(true);
-    fetchBriefing(clientId).then((d) => setBriefing(d.briefing)).catch(console.error).finally(() => setLoadingBriefing(false));
-  }
-  function loadOutcomes() {
-    if (outcomes) return;
-    setLoadingOutcomes(true);
-    fetchOutcomes(clientId).then((d) => setOutcomes(d.outcomes)).catch(console.error).finally(() => setLoadingOutcomes(false));
-  }
-
   useEffect(() => {
-    if (tab === "briefing" && clientId) loadBriefing();
-    if (tab === "outcomes" && clientId) loadOutcomes();
+    if (tab === "briefing" && clientId && !briefing && !loadingBriefing) {
+      setLoadingBriefing(true);
+      fetchBriefing(clientId).then(d => setBriefing(d.briefing)).catch(console.error).finally(() => setLoadingBriefing(false));
+    }
+    if (tab === "outcomes" && clientId && !outcomes && !loadingOutcomes) {
+      setLoadingOutcomes(true);
+      fetchOutcomes(clientId).then(d => setOutcomes(d.outcomes)).catch(console.error).finally(() => setLoadingOutcomes(false));
+    }
   }, [tab, clientId]);
 
-  if (!client) {
-    return (
-      <div className="p-8">
-        <div className="shimmer h-8 w-64 mb-4" />
-        <div className="shimmer h-40 rounded-2xl mb-6" />
-        <div className="shimmer h-64 rounded-2xl" />
-      </div>
-    );
-  }
+  if (!client) return <div className="p-8"><div className="shimmer h-32 rounded-2xl mb-4" /><div className="shimmer h-64 rounded-2xl" /></div>;
 
   const tabs = [
-    { id: "briefing", label: "Pre-session briefing", icon: "📋" },
-    { id: "timeline", label: "Session timeline", icon: "📅" },
-    { id: "outcomes", label: "Outcome insights", icon: "📊" },
+    { id: "briefing", label: "Briefing", icon: "📋" },
+    { id: "timeline", label: "Timeline", icon: "📅" },
+    { id: "outcomes", label: "Outcomes", icon: "📊" },
   ];
 
   return (
-    <div className="p-8 max-w-[1100px]">
-      {/* Back button */}
-      <button onClick={onBack} className="text-sm font-medium mb-4 transition-base" style={{ color: "var(--clr-muted)" }}
-        onMouseEnter={(e) => e.target.style.color = "var(--clr-primary)"}
-        onMouseLeave={(e) => e.target.style.color = "var(--clr-muted)"}>
+    <div className="p-8 max-w-[1000px]">
+      <button onClick={onBack} className="text-sm font-medium mb-3 transition-base block" style={{ color: "var(--clr-muted)" }}
+        onMouseEnter={e => e.target.style.color = "var(--clr-primary)"} onMouseLeave={e => e.target.style.color = "var(--clr-muted)"}>
         ← Caseload
       </button>
 
-      {/* Client header card */}
-      <div className="card p-6 mb-6 animate-fade-in">
-        <div className="flex items-start justify-between">
-          <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-              style={{
-                background: client.riskLevel === "high" ? "linear-gradient(135deg, #dc2626, #ef4444)"
-                  : client.riskLevel === "moderate" ? "linear-gradient(135deg, #d97706, #f59e0b)"
-                  : "linear-gradient(135deg, #059669, #10b981)"
-              }}>
+      {/* Client header */}
+      <div className="card p-5 mb-5 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white"
+              style={{ background: client.riskLevel === "high" ? "linear-gradient(135deg,#dc2626,#ef4444)" : client.riskLevel === "moderate" ? "linear-gradient(135deg,#d97706,#f59e0b)" : "linear-gradient(135deg,#059669,#10b981)" }}>
               {client.name.split(" ").map(n => n[0]).join("")}
             </div>
             <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <h2 className="text-xl font-bold" style={{ color: "var(--clr-slate)" }}>{client.name}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold" style={{ color: "var(--clr-slate)" }}>{client.name}</h2>
                 <StatusBadge status={client.riskLevel} />
               </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[12px]" style={{ color: "var(--clr-muted)" }}>
-                <span>{client.age}yo {client.gender}</span>
-                <span style={{ opacity: 0.4 }}>|</span>
-                <span>{client.diagnosis}</span>
-                {client.coOccurring && <>
-                  <span style={{ opacity: 0.4 }}>|</span>
-                  <span style={{ color: "var(--clr-warning)" }}>Co-occurring: {client.coOccurring}</span>
-                </>}
-                <span style={{ opacity: 0.4 }}>|</span>
-                <span>{client.programType} • Day {client.programDay}</span>
-                {client.mat && <>
-                  <span style={{ opacity: 0.4 }}>|</span>
-                  <span style={{ color: "var(--clr-primary)" }}>MAT: {client.mat}</span>
-                </>}
-              </div>
+              <p className="text-[12px]" style={{ color: "var(--clr-muted)" }}>
+                {client.age}yo {client.gender} · {client.diagnosis} · {client.programType} · Day {client.programDay}
+                {client.coOccurring && <span style={{ color: "var(--clr-warning)" }}> · {client.coOccurring}</span>}
+                {client.mat && <span style={{ color: "var(--clr-primary)" }}> · {client.mat}</span>}
+              </p>
             </div>
           </div>
-          <button onClick={() => onDocumentSession(clientId)} className="btn-primary" style={{ fontSize: 13 }}>
-            Document session
-          </button>
+          <button onClick={() => onDocumentSession(clientId)} className="btn-primary" style={{ fontSize: 13 }}>Document session</button>
         </div>
 
-        {/* Treatment plan objectives */}
-        <div className="mt-5 pt-5 border-t" style={{ borderColor: "var(--clr-border)" }}>
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--clr-muted)" }}>
-            Treatment plan objectives
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            {client.treatmentPlan.objectives.map((obj) => (
-              <div key={obj.id} className="flex items-start gap-2 text-[12px] py-1">
-                <StatusBadge status={obj.status} className="flex-shrink-0 mt-0.5" />
-                <span style={{ color: "var(--clr-slate-mid)" }}>{obj.description}</span>
-              </div>
-            ))}
-          </div>
+        {/* Objectives row */}
+        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t" style={{ borderColor: "var(--clr-border)" }}>
+          {(client.treatmentPlan?.objectives || []).map((obj, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg"
+              style={{ background: "var(--clr-bg)", color: "var(--clr-slate-mid)" }}>
+              <StatusBadge status={obj.status} />
+              <span className="max-w-[200px] truncate">{obj.description}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 mb-6 p-1.5 rounded-xl" style={{ background: "#e2e8f0" }}>
-        {tabs.map((t) => (
+      {/* Tabs */}
+      <div className="flex gap-1 mb-5 p-1 rounded-xl" style={{ background: "#e2e8f0" }}>
+        {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className="flex-1 py-2.5 rounded-lg text-[13px] font-medium transition-base flex items-center justify-center gap-2"
-            style={{
-              background: tab === t.id ? "var(--clr-card)" : "transparent",
-              color: tab === t.id ? "var(--clr-primary)" : "var(--clr-muted)",
-              boxShadow: tab === t.id ? "var(--shadow-md)" : "none",
-            }}>
+            className="flex-1 py-2.5 rounded-lg text-[13px] font-medium transition-base flex items-center justify-center gap-1.5"
+            style={{ background: tab === t.id ? "var(--clr-card)" : "transparent", color: tab === t.id ? "var(--clr-primary)" : "var(--clr-muted)", boxShadow: tab === t.id ? "var(--shadow-md)" : "none" }}>
             <span>{t.icon}</span> {t.label}
           </button>
         ))}
       </div>
 
-      {/* Tab content */}
       {tab === "briefing" && <BriefingPanel briefing={briefing} loading={loadingBriefing} />}
-      {tab === "timeline" && <TimelinePanel sessions={client.sessions} expandedSession={expandedSession} setExpandedSession={setExpandedSession} />}
+      {tab === "timeline" && <TimelinePanel sessions={client.sessions} expanded={expandedSession} setExpanded={setExpandedSession} />}
       {tab === "outcomes" && <OutcomesPanel outcomes={outcomes} loading={loadingOutcomes} />}
     </div>
   );
 }
 
-/* ==================== BRIEFING ==================== */
+// ==================== BRIEFING (TABBED) ====================
 function BriefingPanel({ briefing, loading }) {
-  if (loading) return <div className="card p-6"><LoadingState message="Claude is preparing the pre-session briefing..." lines={8} /></div>;
+  const [subTab, setSubTab] = useState("quick");
+
+  if (loading) return <div className="card p-6"><LoadingState message="Preparing briefing..." lines={6} /></div>;
   if (!briefing) return null;
 
+  const qg = briefing.quickGlance;
+  const full = briefing.fullBriefing;
+
+  // Handle old format (no quickGlance)
+  if (!qg && !full) {
+    return (
+      <div className="card p-6 animate-fade-in">
+        <p className="text-sm" style={{ color: "var(--clr-slate-mid)" }}>{briefing.clientSnapshot || "Briefing data unavailable in expected format."}</p>
+      </div>
+    );
+  }
+
+  const riskColors = {
+    low: { bg: "var(--clr-success-light)", color: "var(--clr-success)", border: "var(--clr-success-border)" },
+    moderate: { bg: "var(--clr-warning-light)", color: "var(--clr-warning)", border: "var(--clr-warning-border)" },
+    elevated: { bg: "var(--clr-danger-light)", color: "var(--clr-danger)", border: "var(--clr-danger-border)" },
+    high: { bg: "var(--clr-danger-light)", color: "var(--clr-danger)", border: "var(--clr-danger-border)" },
+  };
+  const trendIcon = { improving: "↑", stable: "→", declining: "↓", mixed: "↕" };
+  const trendClass = { improving: "trend-up", stable: "trend-stable", declining: "trend-down", mixed: "trend-mixed" };
+
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="card p-5">
-        <h3 className="text-sm font-bold mb-2" style={{ color: "var(--clr-slate)" }}>📸 Client snapshot</h3>
-        <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--clr-slate-mid)" }}>{briefing.clientSnapshot}</p>
+    <div className="animate-fade-in">
+      {/* Sub-tabs */}
+      <div className="flex gap-2 mb-4">
+        {[{ id: "quick", label: "⚡ Quick glance" }, { id: "full", label: "📖 Full briefing" }].map(t => (
+          <button key={t.id} onClick={() => setSubTab(t.id)}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium transition-base"
+            style={{
+              background: subTab === t.id ? "var(--clr-primary)" : "var(--clr-card)",
+              color: subTab === t.id ? "white" : "var(--clr-slate-mid)",
+              border: `1.5px solid ${subTab === t.id ? "var(--clr-primary)" : "var(--clr-border)"}`,
+            }}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      <div className="card p-5">
-        <h3 className="text-sm font-bold mb-2" style={{ color: "var(--clr-slate)" }}>📈 Recent trajectory</h3>
-        <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--clr-slate-mid)" }}>{briefing.recentTrajectory}</p>
-      </div>
-
-      {briefing.patternAlerts?.length > 0 && (
-        <div className="card p-5">
-          <h3 className="text-sm font-bold mb-3" style={{ color: "var(--clr-slate)" }}>🔍 Pattern alerts</h3>
-          <div className="space-y-3">
-            {briefing.patternAlerts.map((alert, i) => {
-              const isConcern = alert.type === "concern";
-              const isPositive = alert.type === "positive";
-              return (
-                <div key={i} className="rounded-xl p-4" style={{
-                  background: isConcern ? "var(--clr-danger-light)" : isPositive ? "var(--clr-success-light)" : "var(--clr-bg)",
-                  borderLeft: `4px solid ${isConcern ? "var(--clr-danger)" : isPositive ? "var(--clr-success)" : "var(--clr-primary)"}`,
-                }}>
-                  <p className="text-[13px] font-semibold mb-1" style={{
-                    color: isConcern ? "var(--clr-danger)" : isPositive ? "var(--clr-success)" : "var(--clr-slate)"
-                  }}>
-                    {isConcern ? "⚠ " : isPositive ? "✓ " : ""}{alert.pattern}
-                  </p>
-                  <p className="text-[12px]" style={{ color: "var(--clr-slate-mid)" }}>{alert.clinicalImplication}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {briefing.treatmentPlanProgress?.length > 0 && (
-        <div className="card p-5">
-          <h3 className="text-sm font-bold mb-3" style={{ color: "var(--clr-slate)" }}>🎯 Treatment plan progress</h3>
-          <div className="space-y-3">
-            {briefing.treatmentPlanProgress.map((obj, i) => (
-              <div key={i} className="flex items-start gap-3 py-1">
-                <StatusBadge status={obj.status} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[13px] font-semibold" style={{ color: "var(--clr-slate)" }}>{obj.objective}</p>
-                  <p className="text-[12px] mt-0.5" style={{ color: "var(--clr-slate-mid)" }}>{obj.evidence}</p>
-                </div>
+      {/* QUICK GLANCE */}
+      {subTab === "quick" && qg && (
+        <div className="space-y-3 animate-fade-in">
+          {/* Top row: risk + trajectory + one-liner */}
+          <div className="card p-5">
+            <p className="text-[15px] font-semibold mb-4" style={{ color: "var(--clr-slate)" }}>{qg.oneLiner}</p>
+            <div className="flex gap-3">
+              <div className="flex-1 rounded-xl p-3 text-center" style={{ background: riskColors[qg.riskScore]?.bg || "var(--clr-bg)", border: `1px solid ${riskColors[qg.riskScore]?.border || "var(--clr-border)"}` }}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: riskColors[qg.riskScore]?.color }}>Risk</p>
+                <p className="text-lg font-bold capitalize" style={{ color: riskColors[qg.riskScore]?.color }}>{qg.riskScore}</p>
               </div>
-            ))}
+              <div className="flex-1 rounded-xl p-3 text-center" style={{ background: "var(--clr-bg)" }}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--clr-muted)" }}>Trajectory</p>
+                <p className={`text-lg font-bold capitalize ${trendClass[qg.trajectory] || ""}`}>
+                  {trendIcon[qg.trajectory] || ""} {qg.trajectory}
+                </p>
+              </div>
+              <div className="flex-2 rounded-xl p-3" style={{ background: "var(--clr-primary-light)", border: "1px solid var(--clr-primary-mid)" }}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--clr-primary)" }}>Top priority</p>
+                <p className="text-[14px] font-semibold" style={{ color: "var(--clr-primary-dark)" }}>{qg.topPriority}</p>
+              </div>
+            </div>
           </div>
+
+          {/* Key flags */}
+          <div className="card p-5">
+            <p className="section-label mb-3">Key flags for this session</p>
+            <div className="space-y-2">
+              {(qg.keyFlags || []).map((flag, i) => (
+                <div key={i} className="flex items-center gap-3 py-1.5">
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
+                    style={{ background: i === 0 ? "var(--clr-danger)" : i === 1 ? "var(--clr-warning)" : "var(--clr-muted)" }}>{i + 1}</span>
+                  <span className="text-[14px]" style={{ color: "var(--clr-slate)" }}>{flag}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Last session */}
+          {qg.lastSessionHighlight && (
+            <div className="rounded-xl p-4" style={{ background: "var(--clr-bg)", border: "1px solid var(--clr-border)" }}>
+              <span className="text-[11px] font-semibold" style={{ color: "var(--clr-muted)" }}>Last session: </span>
+              <span className="text-[13px]" style={{ color: "var(--clr-slate-mid)" }}>{qg.lastSessionHighlight}</span>
+            </div>
+          )}
         </div>
       )}
 
-      {briefing.suggestedFocus?.length > 0 && (
-        <div className="rounded-xl p-5" style={{ background: "var(--clr-primary-light)", border: "1.5px solid var(--clr-primary-mid)" }}>
-          <h3 className="text-sm font-bold mb-3" style={{ color: "var(--clr-primary-dark)" }}>💡 Suggested session focus</h3>
-          <ul className="space-y-2.5">
-            {briefing.suggestedFocus.map((item, i) => (
-              <li key={i} className="text-[13px] flex items-start gap-2.5" style={{ color: "var(--clr-primary-dark)" }}>
-                <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--clr-primary)" }}>→</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* FULL BRIEFING */}
+      {subTab === "full" && full && (
+        <div className="space-y-3 animate-fade-in">
+          <div className="card p-5">
+            <p className="section-label mb-2">Client snapshot</p>
+            <p className="text-[13px] leading-relaxed" style={{ color: "var(--clr-slate-mid)" }}>{full.clientSnapshot}</p>
+          </div>
 
-      {briefing.strengthsToReinforce?.length > 0 && (
-        <div className="rounded-xl p-5" style={{ background: "var(--clr-success-light)", border: "1.5px solid var(--clr-success-border)" }}>
-          <h3 className="text-sm font-bold mb-2" style={{ color: "var(--clr-success)" }}>💪 Strengths to reinforce</h3>
-          {briefing.strengthsToReinforce.map((s, i) => (
-            <p key={i} className="text-[13px] mb-1 last:mb-0" style={{ color: "#065f46" }}>✓ {s}</p>
-          ))}
+          <div className="card p-5">
+            <p className="section-label mb-2">Recent trajectory</p>
+            <p className="text-[13px] leading-relaxed" style={{ color: "var(--clr-slate-mid)" }}>{full.recentTrajectory}</p>
+          </div>
+
+          {full.patternAlerts?.length > 0 && (
+            <div className="card p-5">
+              <p className="section-label mb-3">Pattern alerts</p>
+              <div className="space-y-2.5">
+                {full.patternAlerts.map((a, i) => (
+                  <div key={i} className="rounded-lg p-3" style={{
+                    background: a.type === "concern" ? "var(--clr-danger-light)" : a.type === "positive" ? "var(--clr-success-light)" : "var(--clr-bg)",
+                    borderLeft: `3px solid ${a.type === "concern" ? "var(--clr-danger)" : a.type === "positive" ? "var(--clr-success)" : "var(--clr-primary)"}`,
+                  }}>
+                    <p className="text-[13px] font-semibold" style={{ color: a.type === "concern" ? "var(--clr-danger)" : a.type === "positive" ? "var(--clr-success)" : "var(--clr-slate)" }}>
+                      {a.title || a.pattern}
+                    </p>
+                    {a.detail && <p className="text-[12px] mt-1" style={{ color: "var(--clr-slate-mid)" }}>{a.detail}</p>}
+                    {a.clinicalImplication && <p className="text-[11px] mt-1 italic" style={{ color: "var(--clr-muted)" }}>{a.clinicalImplication}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {full.treatmentPlanProgress?.length > 0 && (
+            <div className="card p-5">
+              <p className="section-label mb-3">Treatment plan progress</p>
+              <div className="space-y-3">
+                {full.treatmentPlanProgress.map((obj, i) => (
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[13px] font-medium" style={{ color: "var(--clr-slate)" }}>{obj.objective}</span>
+                      <StatusBadge status={obj.status} />
+                    </div>
+                    <div className="progress-bar mb-1">
+                      <div className="progress-bar-fill" style={{ width: `${obj.progressPercent || 0}%`, background: getProgressColor(obj.progressPercent || 0) }} />
+                    </div>
+                    <p className="text-[11px]" style={{ color: "var(--clr-muted)" }}>{obj.evidence}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {full.suggestedFocus?.length > 0 && (
+            <div className="rounded-xl p-5" style={{ background: "var(--clr-primary-light)", border: "1px solid var(--clr-primary-mid)" }}>
+              <p className="section-label mb-2" style={{ color: "var(--clr-primary)" }}>Suggested focus</p>
+              {full.suggestedFocus.map((s, i) => (
+                <p key={i} className="text-[13px] mb-1.5 flex items-start gap-2" style={{ color: "var(--clr-primary-dark)" }}>
+                  <span>→</span><span>{s}</span>
+                </p>
+              ))}
+            </div>
+          )}
+
+          {full.strengthsToReinforce?.length > 0 && (
+            <div className="rounded-xl p-4" style={{ background: "var(--clr-success-light)", border: "1px solid var(--clr-success-border)" }}>
+              <p className="section-label mb-2" style={{ color: "var(--clr-success)" }}>Strengths to reinforce</p>
+              {full.strengthsToReinforce.map((s, i) => (
+                <p key={i} className="text-[13px] mb-1" style={{ color: "#065f46" }}>✓ {s}</p>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-/* ==================== TIMELINE ==================== */
-function TimelinePanel({ sessions, expandedSession, setExpandedSession }) {
+// ==================== TIMELINE ====================
+function TimelinePanel({ sessions, expanded, setExpanded }) {
   const reversed = [...sessions].reverse();
   const sentimentColors = {
     improving: "var(--clr-success)", "cautiously-improving": "var(--clr-warning)", stable: "var(--clr-muted)",
@@ -234,189 +279,242 @@ function TimelinePanel({ sessions, expandedSession, setExpandedSession }) {
   };
 
   return (
-    <div className="relative animate-fade-in">
-      {/* Vertical timeline line */}
-      <div className="absolute left-[23px] top-4 bottom-4 w-[2px] rounded-full" style={{ background: "var(--clr-border)" }} />
+    <div className="space-y-2.5 animate-fade-in">
+      {reversed.map((s, idx) => {
+        const isOpen = expanded === s.id;
+        const dotColor = sentimentColors[s.tags?.sessionSentiment] || "var(--clr-muted)";
+        const risks = s.tags?.riskIndicators || [];
 
-      <div className="space-y-3">
-        {reversed.map((session, idx) => {
-          const expanded = expandedSession === session.id;
-          const dotColor = sentimentColors[session.tags.sessionSentiment] || "var(--clr-muted)";
-          const hasRisk = session.tags.riskIndicators?.length > 0;
+        return (
+          <div key={s.id} className="card overflow-hidden animate-fade-in"
+            style={{ animationDelay: `${idx * 40}ms`, animationFillMode: "both", borderColor: isOpen ? "var(--clr-primary-mid)" : undefined }}>
+            {/* Compact header */}
+            <button onClick={() => setExpanded(isOpen ? null : s.id)}
+              className="w-full px-5 py-3.5 flex items-center gap-4 text-left transition-base"
+              onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = "#fafbfc"; }}
+              onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = "transparent"; }}>
+              {/* Dot */}
+              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: dotColor, boxShadow: risks.length ? `0 0 0 3px ${dotColor}30` : "none" }} />
 
-          return (
-            <div key={session.id} className="relative pl-14 animate-fade-in"
-              style={{ animationDelay: `${idx * 50}ms`, animationFillMode: "both" }}>
-              {/* Timeline dot */}
-              <div className="absolute left-[15px] top-[18px] w-[18px] h-[18px] rounded-full border-[3px] z-10"
-                style={{
-                  background: "var(--clr-card)",
-                  borderColor: dotColor,
-                  boxShadow: hasRisk ? `0 0 0 3px ${dotColor}33` : "none",
-                }} />
+              <div className="flex-1 min-w-0">
+                <span className="text-[14px] font-semibold" style={{ color: "var(--clr-slate)" }}>Session {s.sessionNumber}</span>
+                <span className="text-[12px] ml-2" style={{ color: "var(--clr-muted)" }}>{s.date}</span>
+              </div>
 
-              <div className={`card ${expanded ? "" : "card-interactive"} overflow-hidden`}
-                style={{ borderColor: expanded ? "var(--clr-primary-mid)" : undefined }}>
-                {/* Header */}
-                <button onClick={() => setExpandedSession(expanded ? null : session.id)}
-                  className="w-full p-4 flex items-center justify-between text-left">
-                  <div>
-                    <span className="text-[14px] font-bold" style={{ color: "var(--clr-slate)" }}>Session {session.sessionNumber}</span>
-                    <span className="text-[12px] ml-2" style={{ color: "var(--clr-muted)" }}>{session.date}</span>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {risks.length > 0 && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold"
+                    style={{ background: "var(--clr-danger-light)", color: "var(--clr-danger)" }}>
+                    {risks.length} risk
+                  </span>
+                )}
+                <StatusBadge status={s.tags?.sessionSentiment} showIcon />
+                <span className="text-[10px]" style={{ color: "var(--clr-muted)", transform: isOpen ? "rotate(180deg)" : "", display: "inline-block", transition: "transform 0.2s" }}>▼</span>
+              </div>
+            </button>
+
+            {/* Expanded */}
+            {isOpen && (
+              <div className="px-5 pb-5 border-t animate-fade-in" style={{ borderColor: "var(--clr-border)" }}>
+                {/* DAP in 3 columns */}
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  {["data", "assessment", "plan"].map(key => (
+                    <div key={key}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--clr-primary)" }}>{key}</p>
+                      <p className="text-[12px] leading-relaxed" style={{ color: "var(--clr-slate-mid)" }}>{s.dapNote?.[key]}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Meta row */}
+                <div className="flex flex-wrap gap-x-6 gap-y-1 mt-4 pt-3 border-t text-[11px]" style={{ borderColor: "var(--clr-border)" }}>
+                  {s.tags?.moodIndicators?.length > 0 && (
+                    <div><span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Mood: </span>{s.tags.moodIndicators.join(", ")}</div>
+                  )}
+                  {s.tags?.triggersIdentified?.length > 0 && (
+                    <div><span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Triggers: </span>{s.tags.triggersIdentified.join(", ")}</div>
+                  )}
+                  {s.tags?.copingStrategiesDiscussed?.length > 0 && (
+                    <div><span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Coping: </span>{s.tags.copingStrategiesDiscussed.join(", ")}</div>
+                  )}
+                </div>
+
+                {/* Risk indicators */}
+                {risks.length > 0 && (
+                  <div className="mt-3 rounded-lg p-3" style={{ background: "var(--clr-danger-light)" }}>
+                    {risks.map((r, i) => <p key={i} className="text-[11px] mb-0.5" style={{ color: "var(--clr-danger)" }}>⚠ {r}</p>)}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={session.tags.sessionSentiment} showIcon />
-                    {hasRisk && (
-                      <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold"
-                        style={{ background: "var(--clr-danger-light)", color: "var(--clr-danger)", border: "1px solid var(--clr-danger-border)" }}>
-                        {session.tags.riskIndicators.length} risk
-                      </span>
-                    )}
-                    <span className="text-[11px] transition-base" style={{ color: "var(--clr-muted)", transform: expanded ? "rotate(180deg)" : "" }}>▼</span>
+                )}
+
+                {/* Quotes */}
+                {s.tags?.keyQuotes?.length > 0 && (
+                  <div className="mt-3 space-y-1.5">
+                    {s.tags.keyQuotes.map((q, i) => <blockquote key={i} className="quote">"{q}"</blockquote>)}
                   </div>
-                </button>
+                )}
 
-                {/* Expanded */}
-                {expanded && (
-                  <div className="px-5 pb-5 border-t animate-fade-in" style={{ borderColor: "var(--clr-border)" }}>
-                    <div className="mt-4 space-y-4">
-                      {["data", "assessment", "plan"].map((key) => (
-                        <div key={key}>
-                          <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--clr-primary)" }}>{key}</span>
-                          <p className="text-[13px] leading-[1.7] mt-1" style={{ color: "var(--clr-slate-mid)" }}>{session.dapNote[key]}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-3 text-[12px]" style={{ borderColor: "var(--clr-border)" }}>
-                      <div><span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Mood: </span><span style={{ color: "var(--clr-slate-mid)" }}>{session.tags.moodIndicators.join(", ")}</span></div>
-                      {session.tags.triggersIdentified?.length > 0 && (
-                        <div><span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Triggers: </span><span style={{ color: "var(--clr-slate-mid)" }}>{session.tags.triggersIdentified.join(", ")}</span></div>
-                      )}
-                      <div><span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Coping: </span><span style={{ color: "var(--clr-slate-mid)" }}>{session.tags.copingStrategiesDiscussed.join(", ")}</span></div>
-                      <div><span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Support: </span><span style={{ color: "var(--clr-slate-mid)" }}>{session.tags.supportNetworkChanges}</span></div>
-                    </div>
-
-                    {hasRisk && (
-                      <div className="mt-3 rounded-xl p-3.5" style={{ background: "var(--clr-danger-light)", border: "1px solid var(--clr-danger-border)" }}>
-                        <p className="text-[11px] font-bold mb-1.5" style={{ color: "var(--clr-danger)" }}>⚠ Risk indicators</p>
-                        {session.tags.riskIndicators.map((r, i) => (
-                          <p key={i} className="text-[12px] mb-0.5" style={{ color: "var(--clr-danger)" }}>• {r}</p>
-                        ))}
-                      </div>
-                    )}
-
-                    {session.tags.keyQuotes?.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {session.tags.keyQuotes.map((q, i) => (
-                          <blockquote key={i} className="quote">"{q}"</blockquote>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--clr-border)" }}>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--clr-muted)" }}>Follow-up flags</p>
-                      {session.followUpFlags.map((f, i) => {
-                        const urgent = f.startsWith("PRIORITY:") || f.startsWith("URGENT:");
-                        return (
-                          <p key={i} className="text-[12px] mb-1 flex items-start gap-2" style={{ color: urgent ? "var(--clr-danger)" : "var(--clr-slate-mid)", fontWeight: urgent ? 600 : 400 }}>
-                            <span className="flex-shrink-0">{urgent ? "🔴" : "→"}</span>{f}
-                          </p>
-                        );
-                      })}
-                    </div>
+                {/* Follow-ups */}
+                {(s.followUpFlags || []).length > 0 && (
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--clr-border)" }}>
+                    {s.followUpFlags.map((f, i) => {
+                      const urgent = f.startsWith("PRIORITY:") || f.startsWith("URGENT:");
+                      return <p key={i} className="text-[11px] mb-0.5" style={{ color: urgent ? "var(--clr-danger)" : "var(--clr-slate-mid)", fontWeight: urgent ? 600 : 400 }}>
+                        {urgent ? "🔴 " : "→ "}{f}
+                      </p>;
+                    })}
                   </div>
                 )}
               </div>
-            </div>
-          );
-        })}
-      </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-/* ==================== OUTCOMES ==================== */
+// ==================== OUTCOMES DASHBOARD ====================
 function OutcomesPanel({ outcomes, loading }) {
-  if (loading) return <div className="card p-6"><LoadingState message="Claude is analyzing clinical outcomes..." lines={10} /></div>;
+  if (loading) return <div className="card p-6"><LoadingState message="Analyzing outcomes..." lines={6} /></div>;
   if (!outcomes) return null;
+
+  const overall = outcomes.overallScore;
+  const domains = outcomes.domainScores || [];
+  const interventions = outcomes.interventions || outcomes.interventionEffectiveness || [];
+  const recs = outcomes.topRecommendations || outcomes.evidenceBasedRecommendations || [];
+  const supervision = outcomes.supervisionPoints || outcomes.supervisionTalkingPoints || [];
+
+  const trendIcon = { improving: "↑", stable: "→", declining: "↓", mixed: "↕" };
+  const trendClass = { improving: "trend-up", stable: "trend-stable", declining: "trend-down", mixed: "trend-mixed" };
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {outcomes.interventionEffectiveness?.length > 0 && (
+      {/* Overall score card */}
+      {overall && (
         <div className="card p-6">
-          <h3 className="text-sm font-bold mb-4" style={{ color: "var(--clr-slate)" }}>💊 Intervention effectiveness</h3>
-          <div className="space-y-3">
-            {outcomes.interventionEffectiveness.map((intv, i) => (
-              <div key={i} className="rounded-xl border p-4" style={{ borderColor: "var(--clr-border)" }}>
+          <div className="flex items-center gap-6">
+            <ScoreRing score={overall.score} />
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-bold" style={{ color: "var(--clr-slate)" }}>{overall.label}</h3>
+                <span className={`text-lg font-bold ${trendClass[overall.trend] || ""}`}>{trendIcon[overall.trend] || ""}</span>
+              </div>
+              <p className="text-[13px]" style={{ color: "var(--clr-slate-mid)" }}>{overall.summary}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Domain scores */}
+      {domains.length > 0 && (
+        <div className="card p-5">
+          <p className="section-label mb-4">Recovery domains</p>
+          <div className="grid grid-cols-2 gap-4">
+            {domains.map((d, i) => (
+              <div key={i} className="rounded-xl p-4" style={{ background: "var(--clr-bg)" }}>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-[13px] font-bold" style={{ color: "var(--clr-slate)" }}>{intv.intervention}</h4>
-                  <StatusBadge status={intv.effectiveness} />
-                </div>
-                <p className="text-[11px] mb-2" style={{ color: "var(--clr-muted)" }}>Sessions: {intv.sessionsUsed?.join(", ")}</p>
-                <p className="text-[12.5px] mb-2" style={{ color: "var(--clr-slate-mid)" }}>{intv.progressIndicators}</p>
-                <div className="rounded-lg p-3 text-[12px]" style={{ background: "var(--clr-bg)", color: "var(--clr-primary-dark)" }}>
-                  <span className="font-semibold">Recommendation:</span> {intv.recommendation}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {outcomes.outcomeTrends && (
-        <div className="card p-6">
-          <h3 className="text-sm font-bold mb-4" style={{ color: "var(--clr-slate)" }}>📈 Outcome trends</h3>
-          <div className="space-y-4">
-            {Object.entries(outcomes.outcomeTrends).map(([key, val]) => (
-              <div key={key} className="pb-3 border-b last:border-0 last:pb-0" style={{ borderColor: "var(--clr-border)" }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[13px] font-semibold capitalize" style={{ color: "var(--clr-slate)" }}>
-                    {key.replace(/([A-Z])/g, " $1").trim()}
+                  <span className="text-[13px] font-semibold" style={{ color: "var(--clr-slate)" }}>{d.domain}</span>
+                  <span className={`text-[13px] font-bold ${trendClass[d.trend] || ""}`}>
+                    {d.score}/100 {trendIcon[d.trend] || ""}
                   </span>
-                  <StatusBadge status={val.trend} showIcon />
                 </div>
-                <p className="text-[12px] leading-relaxed" style={{ color: "var(--clr-slate-mid)" }}>{val.evidence || val.summary}</p>
+                <div className="progress-bar">
+                  <div className="progress-bar-fill" style={{ width: `${d.score}%`, background: getProgressColor(d.score) }} />
+                </div>
+                <p className="text-[11px] mt-1.5" style={{ color: "var(--clr-muted)" }}>{d.detail}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {outcomes.evidenceBasedRecommendations?.length > 0 && (
-        <div className="rounded-xl p-6" style={{ background: "var(--clr-primary-light)", border: "1.5px solid var(--clr-primary-mid)" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "var(--clr-primary-dark)" }}>🔬 Evidence-based recommendations</h3>
+      {/* Interventions */}
+      {interventions.length > 0 && (
+        <div className="card p-5">
+          <p className="section-label mb-4">Intervention effectiveness</p>
           <div className="space-y-3">
-            {outcomes.evidenceBasedRecommendations.map((rec, i) => (
-              <div key={i} className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.7)" }}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-[12.5px] font-semibold" style={{ color: "var(--clr-slate)" }}>{rec.observation}</p>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{
-                      background: rec.priority === "high" ? "var(--clr-danger-light)" : rec.priority === "medium" ? "var(--clr-amber-light)" : "var(--clr-bg)",
-                      color: rec.priority === "high" ? "var(--clr-danger)" : rec.priority === "medium" ? "var(--clr-warning)" : "var(--clr-muted)",
-                    }}>
-                    {rec.priority}
-                  </span>
+            {interventions.map((intv, i) => {
+              const score = intv.effectivenessScore ?? intv.score ?? 50;
+              const name = intv.name || intv.intervention;
+              return (
+                <div key={i} className="flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[13px] font-medium truncate" style={{ color: "var(--clr-slate)" }}>{name}</span>
+                      <span className="text-[12px] font-bold" style={{ color: getProgressColor(score) }}>{score}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div className="progress-bar-fill" style={{ width: `${score}%`, background: getProgressColor(score) }} />
+                    </div>
+                    <p className="text-[11px] mt-1" style={{ color: "var(--clr-muted)" }}>
+                      {intv.sessionsUsed ? `${intv.sessionsUsed} sessions` : ""} · {intv.recommendation || intv.verdict}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[12px] mb-1" style={{ color: "var(--clr-primary-dark)" }}>→ {rec.recommendation}</p>
-                <p className="text-[11px] italic" style={{ color: "var(--clr-slate-mid)" }}>Basis: {rec.clinicalBasis}</p>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recommendations */}
+      {recs.length > 0 && (
+        <div className="rounded-xl p-5" style={{ background: "var(--clr-primary-light)", border: "1px solid var(--clr-primary-mid)" }}>
+          <p className="section-label mb-3" style={{ color: "var(--clr-primary)" }}>Recommendations</p>
+          <div className="space-y-2">
+            {recs.map((r, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 mt-0.5"
+                  style={{ background: (r.priority === "high") ? "var(--clr-danger)" : "var(--clr-warning)" }}>
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="text-[13px] font-medium" style={{ color: "var(--clr-primary-dark)" }}>{r.action || r.recommendation || r.observation}</p>
+                  <p className="text-[11px]" style={{ color: "var(--clr-muted)" }}>{r.basis || r.clinicalBasis}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {outcomes.supervisionTalkingPoints?.length > 0 && (
-        <div className="card p-6">
-          <h3 className="text-sm font-bold mb-3" style={{ color: "var(--clr-slate)" }}>👩‍⚕️ Supervision talking points</h3>
-          {outcomes.supervisionTalkingPoints.map((pt, i) => (
-            <p key={i} className="text-[13px] mb-2 last:mb-0 flex items-start gap-2" style={{ color: "var(--clr-slate-mid)" }}>
-              <span style={{ color: "var(--clr-primary)" }}>•</span>{pt}
+      {/* Supervision */}
+      {supervision.length > 0 && (
+        <div className="card p-5">
+          <p className="section-label mb-2">Supervision talking points</p>
+          {supervision.map((p, i) => (
+            <p key={i} className="text-[13px] mb-1 flex items-start gap-2" style={{ color: "var(--clr-slate-mid)" }}>
+              <span style={{ color: "var(--clr-primary)" }}>•</span>{typeof p === "string" ? p : p.point || JSON.stringify(p)}
             </p>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ==================== SHARED HELPERS ====================
+function getProgressColor(score) {
+  if (score >= 70) return "var(--clr-success)";
+  if (score >= 40) return "var(--clr-warning)";
+  return "var(--clr-danger)";
+}
+
+function ScoreRing({ score }) {
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color = getProgressColor(score);
+
+  return (
+    <div className="score-ring flex-shrink-0">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r={radius} fill="none" stroke="var(--clr-border)" strokeWidth="6" />
+        <circle cx="40" cy="40" r={radius} fill="none" stroke={color} strokeWidth="6"
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          strokeLinecap="round" style={{ transition: "stroke-dashoffset 1s ease" }} />
+      </svg>
+      <div className="score-ring-text" style={{ color }}>{score}</div>
     </div>
   );
 }
