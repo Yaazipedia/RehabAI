@@ -39,7 +39,7 @@ export default function ClientView({ clientId, onBack, onDocumentSession }) {
   ];
 
   return (
-    <div className="p-8 max-w-[1000px]">
+    <div style={{ padding: "32px", maxWidth: "1000px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
       <button onClick={onBack} className="text-sm font-medium mb-3 transition-base block" style={{ color: "var(--clr-muted)" }}
         onMouseEnter={e => e.target.style.color = "var(--clr-primary)"} onMouseLeave={e => e.target.style.color = "var(--clr-muted)"}>
         ← Caseload
@@ -81,7 +81,7 @@ export default function ClientView({ clientId, onBack, onDocumentSession }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 p-1 rounded-xl" style={{ background: "#e2e8f0" }}>
+      <div className="flex gap-1 mb-5 p-1 rounded-xl" style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-inset-sm)" }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="flex-1 py-2.5 rounded-lg text-[13px] font-medium transition-base flex items-center justify-center gap-1.5"
@@ -291,7 +291,7 @@ function TimelinePanel({ sessions, expanded, setExpanded }) {
             {/* Compact header */}
             <button onClick={() => setExpanded(isOpen ? null : s.id)}
               className="w-full px-5 py-3.5 flex items-center gap-4 text-left transition-base"
-              onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = "#fafbfc"; }}
+              onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = "rgba(99,102,241,0.04)"; }}
               onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = "transparent"; }}>
               {/* Dot */}
               <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: dotColor, boxShadow: risks.length ? `0 0 0 3px ${dotColor}30` : "none" }} />

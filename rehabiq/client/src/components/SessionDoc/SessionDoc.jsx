@@ -46,7 +46,7 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
   }
 
   return (
-    <div className="p-8 max-w-[1100px]">
+    <div style={{ padding: "32px", maxWidth: "1100px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
       {/* Header */}
       <div className="flex items-center gap-4 mb-7">
         <button onClick={onBack} className="text-sm font-medium transition-base" style={{ color: "var(--clr-muted)" }}
