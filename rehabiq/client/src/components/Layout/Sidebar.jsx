@@ -1,4 +1,21 @@
-export default function Sidebar({ currentView, onNavigate }) {
+import { useState } from "react";
+import { logout as apiLogout } from "../../services/api";
+
+export default function Sidebar({ currentView, onNavigate, onLogout }) {
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (!onLogout || loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await apiLogout();
+      onLogout();
+    } catch {
+      onLogout();
+    } finally {
+      setLoggingOut(false);
+    }
+  }
   const navItems = [
     {
       id: "dashboard",
@@ -211,17 +228,19 @@ export default function Sidebar({ currentView, onNavigate }) {
         }}
       />
 
-      {/* User avatar + name */}
-      <div style={{
-        paddingBottom: "24px",
-        paddingTop: "12px",
-        paddingLeft: "16px",
-        paddingRight: "16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        width: "100%",
-      }}>
+      {/* User avatar + name + log out (lower left) */}
+      <div
+        style={{
+          paddingBottom: "20px",
+          paddingTop: "12px",
+          paddingLeft: "12px",
+          paddingRight: "12px",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "10px",
+          width: "100%",
+        }}
+      >
         <div
           style={{
             width: "36px",
@@ -236,18 +255,75 @@ export default function Sidebar({ currentView, onNavigate }) {
             fontWeight: "700",
             fontSize: "12px",
             userSelect: "none",
-            cursor: "pointer",
             flexShrink: 0,
           }}
           title="Dr. Rivera"
         >
           DR
         </div>
-        <div>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "white" }}>
-            Dr. Rivera
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "6px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "white",
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                lineHeight: 1.2,
+              }}
+            >
+              Dr. Rivera
+            </span>
+            {onLogout && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                title="Sign out"
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  background: "rgba(255,255,255,0.06)",
+                  cursor: loggingOut ? "wait" : "pointer",
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  color: "rgba(255,255,255,0.75)",
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
+                  transition: "background 0.2s ease, color 0.2s ease, border-color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+                  e.currentTarget.style.color = "white";
+                  e.currentTarget.style.borderColor = "rgba(82,183,136,0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.75)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)";
+                }}
+              >
+                {loggingOut ? "…" : "Log out"}
+              </button>
+            )}
           </div>
-          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>
+          <div
+            style={{
+              fontSize: "10px",
+              color: "rgba(255,255,255,0.4)",
+              marginTop: "4px",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+            }}
+          >
             Counselor
           </div>
         </div>
