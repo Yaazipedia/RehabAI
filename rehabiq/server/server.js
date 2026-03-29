@@ -39,6 +39,9 @@ const isProd =
   process.env.NODE_ENV === "production" ||
   (!clientOrigin.includes("localhost") && !clientOrigin.includes("127.0.0.1"));
 
+// Trust Render/cloud reverse proxy so req.secure=true and secure cookies work
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(
   cors({
