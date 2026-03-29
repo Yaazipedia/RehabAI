@@ -32,8 +32,12 @@ if (!process.env.COUNSELOR_EMAIL || !process.env.COUNSELOR_PASSWORD) {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const isProd = process.env.NODE_ENV === "production";
 const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+// Treat as production if NODE_ENV is set, OR if CLIENT_ORIGIN points to a
+// non-localhost URL (i.e. we are deployed on Render/Vercel even without NODE_ENV).
+const isProd =
+  process.env.NODE_ENV === "production" ||
+  (!clientOrigin.includes("localhost") && !clientOrigin.includes("127.0.0.1"));
 
 // Middleware
 app.use(
