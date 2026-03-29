@@ -26,7 +26,7 @@ export default function App() {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar currentView={view} onNavigate={navigateTo} />
-      <main className="flex-1 overflow-y-auto" style={{ background: "var(--nm-bg)" }}>
+      <main className="flex-1 overflow-y-auto" style={{ background: "var(--bg-page)" }}>
         <Header
           currentView={view}
           darkMode={darkMode}

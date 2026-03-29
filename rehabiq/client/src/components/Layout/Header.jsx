@@ -50,22 +50,23 @@ export default function Header({ currentView, darkMode, onToggleDark, onSearch }
   return (
     <div
       style={{
-        margin: "12px 24px",
+        margin: "16px 24px 0",
         position: "sticky",
-        top: "12px",
+        top: "16px",
         zIndex: 40,
       }}
     >
       <div
         style={{
-          height: "66px",
-          borderRadius: "28px",
-          background: "var(--nm-bg)",
-          boxShadow: "var(--nm-flat-lg)",
+          height: "62px",
+          borderRadius: "16px",
+          background: "var(--bg-card)",
+          boxShadow: "var(--card-shadow)",
+          border: "1px solid rgba(27,61,47,0.06)",
           display: "flex",
           alignItems: "center",
           paddingLeft: "24px",
-          paddingRight: "24px",
+          paddingRight: "20px",
           gap: "16px",
         }}
       >
@@ -73,9 +74,9 @@ export default function Header({ currentView, darkMode, onToggleDark, onSearch }
         <div style={{ minWidth: "160px", flexShrink: 0 }}>
           <h2
             style={{
-              fontFamily: "'General Sans', 'Satoshi', system-ui, sans-serif",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
               fontWeight: 700,
-              fontSize: "17px",
+              fontSize: "16px",
               color: "var(--text-primary)",
               lineHeight: 1.2,
             }}
@@ -94,17 +95,18 @@ export default function Header({ currentView, darkMode, onToggleDark, onSearch }
         </div>
 
         {/* Center: search — only on dashboard */}
-        <div style={{ flex: 1, maxWidth: "440px" }}>
+        <div style={{ flex: 1, maxWidth: "400px" }}>
           {currentView === "dashboard" && (
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
-                borderRadius: "100px",
-                background: "var(--nm-bg)",
-                boxShadow: "var(--nm-inset)",
-                padding: "8px 16px",
+                borderRadius: "10px",
+                background: "var(--bg-page)",
+                border: "1.5px solid #d6e8db",
+                padding: "7px 14px",
+                transition: "border-color 0.2s ease",
               }}
             >
               <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", flexShrink: 0 }}>
@@ -120,7 +122,7 @@ export default function Header({ currentView, darkMode, onToggleDark, onSearch }
                   border: "none",
                   outline: "none",
                   background: "transparent",
-                  fontSize: "14px",
+                  fontSize: "13px",
                   fontFamily: "inherit",
                   color: "var(--text-primary)",
                 }}
@@ -150,32 +152,31 @@ export default function Header({ currentView, darkMode, onToggleDark, onSearch }
         {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Right: theme toggle + avatar only */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {/* Right: theme toggle + avatar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {/* Theme toggle */}
           <button
             onClick={handleToggleDark}
             title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "12px",
-              border: "none",
-              background: "var(--nm-bg)",
-              boxShadow: "var(--nm-button)",
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              border: "1.5px solid #d6e8db",
+              background: "var(--bg-card)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "18px",
-              transition: "box-shadow 0.2s cubic-bezier(0.34,1.56,0.64,1), transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+              fontSize: "16px",
+              transition: "border-color 0.2s ease, transform 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "6px 6px 14px var(--nm-shadow), -6px -6px 14px var(--nm-highlight)";
-              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.borderColor = "var(--green-accent)";
+              e.currentTarget.style.transform = "translateY(-1px)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "var(--nm-button)";
+              e.currentTarget.style.borderColor = "#d6e8db";
               e.currentTarget.style.transform = "translateY(0)";
             }}
           >
@@ -193,11 +194,11 @@ export default function Header({ currentView, darkMode, onToggleDark, onSearch }
           <div
             title="Dr. Rivera"
             style={{
-              width: "40px",
-              height: "40px",
+              width: "36px",
+              height: "36px",
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #6366f1, #818cf8, #a78bfa)",
-              boxShadow: "var(--nm-flat-sm)",
+              background: "var(--green-dark)",
+              border: "2px solid #c8dfd0",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

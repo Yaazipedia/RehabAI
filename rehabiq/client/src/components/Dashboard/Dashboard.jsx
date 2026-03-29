@@ -153,25 +153,27 @@ function QuickAction({ label, icon, gradient, onClick }) {
         display: "flex",
         alignItems: "center",
         gap: "10px",
-        padding: "12px 20px",
-        borderRadius: "14px",
-        border: "none",
-        background: "var(--nm-bg)",
-        boxShadow: "var(--nm-button)",
+        padding: "11px 18px",
+        borderRadius: "12px",
+        border: "1.5px solid #d6e8db",
+        background: "var(--bg-card)",
+        boxShadow: "var(--card-shadow)",
         cursor: "pointer",
         fontWeight: 500,
-        fontSize: "14px",
+        fontSize: "13px",
         fontFamily: "inherit",
         color: "var(--text-primary)",
-        transition: "box-shadow 0.2s cubic-bezier(0.34,1.56,0.64,1), transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+        transition: "box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease",
         whiteSpace: "nowrap",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "6px 6px 14px var(--nm-shadow), -6px -6px 14px var(--nm-highlight)";
+        e.currentTarget.style.boxShadow = "var(--card-shadow-md)";
+        e.currentTarget.style.borderColor = "var(--green-accent)";
         e.currentTarget.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "var(--nm-button)";
+        e.currentTarget.style.boxShadow = "var(--card-shadow)";
+        e.currentTarget.style.borderColor = "#d6e8db";
         e.currentTarget.style.transform = "translateY(0)";
       }}
     >
@@ -314,9 +316,10 @@ function ExportModal({ clients, onClose }) {
     }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{
         width: "480px", maxWidth: "94vw",
-        background: "var(--nm-bg)",
-        borderRadius: "24px",
-        boxShadow: "0 24px 64px rgba(0,0,0,0.22), var(--nm-flat-lg)",
+        background: "var(--bg-card)",
+        borderRadius: "20px",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
+        border: "1px solid rgba(27,61,47,0.08)",
         padding: "32px",
         animation: "fadeInUp 0.25s ease",
       }}>
@@ -362,7 +365,7 @@ function ExportModal({ clients, onClose }) {
         {selectedId && (
           <div style={{
             borderRadius: "12px", padding: "14px 16px", marginBottom: "20px",
-            background: "var(--nm-bg)", boxShadow: "var(--nm-inset-sm)",
+            background: "var(--bg-page)", border: "1px solid rgba(27,61,47,0.07)",
             fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.8,
           }}>
             <strong style={{ color: "var(--text-primary)", display: "block", marginBottom: "6px" }}>JSON file will include:</strong>
@@ -450,22 +453,22 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
   /* ── Loading shimmer ── */
   if (loading) {
     return (
-      <div style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+      <div style={{ padding: "16px 24px 32px", maxWidth: "1200px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
         <div className="shimmer" style={{ height: "10px", width: "240px", marginBottom: "32px", borderRadius: "8px" }} />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="shimmer" style={{ height: "120px", borderRadius: "20px" }} />
+            <div key={i} className="shimmer" style={{ height: "120px", borderRadius: "16px" }} />
           ))}
         </div>
         <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
           {[1, 2, 3].map((i) => (
-            <div key={i} className="shimmer" style={{ height: "48px", flex: 1, borderRadius: "14px" }} />
+            <div key={i} className="shimmer" style={{ height: "44px", flex: 1, borderRadius: "12px" }} />
           ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "20px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {[1, 2, 3].map((i) => (
-              <div key={i} className="shimmer" style={{ height: "80px", borderRadius: "16px" }} />
+              <div key={i} className="shimmer" style={{ height: "76px", borderRadius: "14px" }} />
             ))}
           </div>
           <div className="shimmer" style={{ height: "260px", borderRadius: "16px" }} />
@@ -506,7 +509,7 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
   ];
 
   return (
-    <div style={{ padding: "8px 24px 32px", maxWidth: "1100px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+    <div style={{ padding: "16px 24px 32px", maxWidth: "1200px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
 
       {/* ── Stat Cards ── */}
       <div
@@ -521,36 +524,36 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
           <div
             key={i}
             style={{
-              background: "var(--nm-bg)",
-              boxShadow: "var(--nm-flat)",
-              borderRadius: "20px",
+              background: "var(--bg-card)",
+              boxShadow: "var(--card-shadow)",
+              border: "1px solid rgba(27,61,47,0.06)",
+              borderRadius: "16px",
               padding: "20px",
-              transition: "box-shadow 0.25s cubic-bezier(0.34,1.56,0.64,1), transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+              transition: "box-shadow 0.22s ease, transform 0.22s ease",
               cursor: "default",
               animationDelay: `${i * 80}ms`,
               animation: "fadeInUp 0.4s ease both",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.015)";
-              e.currentTarget.style.boxShadow = "var(--nm-flat-lg)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "var(--card-shadow-md)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow = "var(--nm-flat)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "var(--card-shadow)";
             }}
           >
             {/* Icon */}
             <div
               style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "14px",
-                background: "var(--nm-bg)",
-                boxShadow: "var(--nm-inset)",
+                width: "42px",
+                height: "42px",
+                borderRadius: "12px",
+                background: "var(--green-light)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: "12px",
+                marginBottom: "14px",
               }}
             >
               <span
@@ -569,27 +572,29 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
             </div>
 
             {/* Value */}
-            <div style={{ fontSize: "32px", fontWeight: 800, lineHeight: 1, marginBottom: "6px" }}>
+            <div style={{ fontSize: "30px", fontWeight: 800, lineHeight: 1, marginBottom: "4px", color: "var(--text-primary)" }}>
               <CountUp target={card.value} gradient={card.gradient} />
             </div>
 
             {/* Label */}
-            <div className="section-label" style={{ marginBottom: "6px" }}>{card.label}</div>
+            <div className="section-label" style={{ marginBottom: "8px", fontSize: "10px" }}>{card.label}</div>
 
             {/* Trend */}
             {card.trend && (
               <div
-                className={
-                  card.trend.dir === "up"
-                    ? "trend-up"
-                    : card.trend.dir === "down"
-                    ? "trend-down"
-                    : "trend-stable"
-                }
-                style={{ fontSize: "11px", fontWeight: 500 }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "3px 8px",
+                  borderRadius: "100px",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  background: card.trend.dir === "up" ? "var(--clr-success-light)" : card.trend.dir === "down" ? "var(--clr-danger-light)" : "rgba(0,0,0,0.04)",
+                  color: card.trend.dir === "up" ? "var(--clr-success)" : card.trend.dir === "down" ? "var(--clr-danger)" : "var(--text-muted)",
+                }}
               >
-                {card.trend.dir === "up" ? "↑ " : card.trend.dir === "down" ? "↓ " : "→ "}
-                {card.trend.label}
+                {card.trend.dir === "up" ? "↑" : card.trend.dir === "down" ? "↓" : "→"} {card.trend.label}
               </div>
             )}
           </div>
@@ -654,9 +659,10 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
                 padding: "40px 20px",
                 color: "var(--text-muted)",
                 fontSize: "14px",
-                background: "var(--nm-bg)",
-                boxShadow: "var(--nm-flat)",
-                borderRadius: "16px",
+                background: "var(--bg-card)",
+                boxShadow: "var(--card-shadow)",
+                border: "1px solid rgba(27,61,47,0.06)",
+                borderRadius: "14px",
               }}>
                 No clients match "<strong>{searchQuery}</strong>"
               </div>
@@ -665,25 +671,28 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
               <div
                 key={client.id}
                 style={{
-                  background: "var(--nm-bg)",
-                  boxShadow: "var(--nm-flat)",
-                  borderRadius: "16px",
+                  background: "var(--bg-card)",
+                  boxShadow: "var(--card-shadow)",
+                  border: "1px solid rgba(27,61,47,0.06)",
+                  borderRadius: "14px",
                   padding: "14px 16px",
                   display: "flex",
                   alignItems: "center",
                   gap: "14px",
                   cursor: "pointer",
-                  transition: "box-shadow 0.2s cubic-bezier(0.34,1.56,0.64,1), transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                  transition: "box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease",
                   animation: `fadeInUp 0.35s ease ${idx * 60}ms both`,
                 }}
                 onClick={() => onSelectClient(client.id)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = "var(--nm-flat-lg)";
+                  e.currentTarget.style.boxShadow = "var(--card-shadow-md)";
+                  e.currentTarget.style.borderColor = "#c8dfd0";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "var(--nm-flat)";
+                  e.currentTarget.style.boxShadow = "var(--card-shadow)";
+                  e.currentTarget.style.borderColor = "rgba(27,61,47,0.06)";
                 }}
               >
                 {/* Avatar */}
@@ -778,9 +787,10 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
           {/* Caseload Health */}
           <div
             style={{
-              background: "var(--nm-bg)",
-              boxShadow: "var(--nm-flat)",
-              borderRadius: "20px",
+              background: "var(--bg-card)",
+              boxShadow: "var(--card-shadow)",
+              border: "1px solid rgba(27,61,47,0.06)",
+              borderRadius: "16px",
               padding: "20px",
               marginBottom: "16px",
             }}
@@ -794,18 +804,19 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
           {/* System Log */}
           <div
             style={{
-              background: "var(--nm-bg)",
-              boxShadow: "var(--nm-flat)",
-              borderRadius: "20px",
+              background: "var(--bg-card)",
+              boxShadow: "var(--card-shadow)",
+              border: "1px solid rgba(27,61,47,0.06)",
+              borderRadius: "16px",
               padding: "20px",
             }}
           >
             <div className="section-label" style={{ marginBottom: "12px" }}>System Log</div>
             <div
               style={{
-                background: "var(--nm-bg)",
-                boxShadow: "var(--nm-inset)",
-                borderRadius: "12px",
+                background: "var(--bg-page)",
+                border: "1px solid rgba(27,61,47,0.07)",
+                borderRadius: "10px",
                 padding: "14px 16px",
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: "11px",

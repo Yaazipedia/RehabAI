@@ -45,55 +45,53 @@ export default function Sidebar({ currentView, onNavigate }) {
   return (
     <aside
       style={{
-        width: "180px",
-        minWidth: "180px",
+        width: "200px",
+        minWidth: "200px",
         height: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        background: "var(--nm-bg)",
-        boxShadow: "var(--nm-flat-lg)",
+        background: "var(--bg-sidebar)",
         position: "relative",
         zIndex: 50,
         flexShrink: 0,
       }}
     >
       {/* Logo + Product Name */}
-      <div style={{ paddingTop: "20px", paddingBottom: "8px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-        <div
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "14px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "linear-gradient(135deg, #6366f1, #818cf8, #a78bfa)",
-            boxShadow: "0 4px 14px rgba(99,102,241,0.4), var(--nm-flat-sm)",
-            color: "white",
-            fontWeight: "800",
-            fontSize: "20px",
-            fontFamily: "'General Sans', 'Satoshi', system-ui, sans-serif",
-            userSelect: "none",
-          }}
-        >
-          R
-        </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{
-            fontFamily: "'General Sans', 'Satoshi', system-ui, sans-serif",
-            fontWeight: 700,
-            fontSize: "15px",
-            background: "linear-gradient(135deg, #6366f1, #818cf8)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            letterSpacing: "-0.02em",
-          }}>
-            RehabIQ
+      <div style={{ paddingTop: "24px", paddingBottom: "8px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", width: "100%" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "20px", width: "100%" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(255,255,255,0.15)",
+              color: "white",
+              fontWeight: "800",
+              fontSize: "18px",
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              userSelect: "none",
+              flexShrink: 0,
+            }}
+          >
+            R
           </div>
-          <div style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: 500 }}>
-            Clinical Suite
+          <div>
+            <div style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontWeight: 700,
+              fontSize: "15px",
+              color: "white",
+              letterSpacing: "-0.02em",
+            }}>
+              RehabIQ
+            </div>
+            <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>
+              Clinical Suite
+            </div>
           </div>
         </div>
       </div>
@@ -101,13 +99,30 @@ export default function Sidebar({ currentView, onNavigate }) {
       {/* Divider */}
       <div
         style={{
-          width: "140px",
+          width: "160px",
           height: "1px",
-          background: "var(--nm-shadow)",
-          opacity: 0.3,
-          margin: "8px 0",
+          background: "rgba(255,255,255,0.1)",
+          margin: "16px 0 10px",
         }}
       />
+
+      {/* Section label */}
+      <div style={{
+        width: "100%",
+        paddingLeft: "20px",
+        paddingRight: "20px",
+        marginBottom: "6px",
+      }}>
+        <span style={{
+          fontSize: "10px",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          color: "rgba(255,255,255,0.35)",
+        }}>
+          Navigation
+        </span>
+      </div>
 
       {/* Nav */}
       <nav
@@ -116,10 +131,9 @@ export default function Sidebar({ currentView, onNavigate }) {
           display: "flex",
           flexDirection: "column",
           alignItems: "stretch",
-          gap: "4px",
-          paddingTop: "8px",
-          paddingLeft: "16px",
-          paddingRight: "16px",
+          gap: "2px",
+          paddingLeft: "12px",
+          paddingRight: "12px",
           width: "100%",
         }}
       >
@@ -134,68 +148,54 @@ export default function Sidebar({ currentView, onNavigate }) {
               style={{
                 width: "100%",
                 padding: "10px 12px",
-                borderRadius: "12px",
+                borderRadius: "10px",
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
                 cursor: "pointer",
                 border: "none",
                 background: active
-                  ? "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(129,140,248,0.08))"
+                  ? "rgba(255,255,255,0.13)"
                   : "transparent",
-                color: active ? "var(--accent-indigo)" : "var(--text-secondary)",
-                boxShadow: active ? "var(--nm-inset-sm)" : "none",
-                transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                color: active ? "white" : "rgba(255,255,255,0.55)",
+                transition: "all 0.2s ease",
                 textAlign: "left",
               }}
               onMouseEnter={(e) => {
                 if (!active) {
-                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(129,140,248,0.05))";
-                  e.currentTarget.style.color = "var(--accent-indigo)";
-                  e.currentTarget.style.transform = "translateX(3px)";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.85)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!active) {
                   e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "var(--text-secondary)";
-                  e.currentTarget.style.transform = "translateX(0)";
-                }
-              }}
-              onMouseDown={(e) => {
-                e.currentTarget.style.boxShadow = "var(--nm-inset-sm)";
-                e.currentTarget.style.transform = "scale(0.97)";
-              }}
-              onMouseUp={(e) => {
-                if (!active) {
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.transform = "translateX(3px)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.55)";
                 }
               }}
             >
-              <span style={{ flexShrink: 0, opacity: active ? 1 : 0.75 }}>
+              {/* Active indicator bar */}
+              <div style={{
+                width: "3px",
+                height: "20px",
+                borderRadius: "3px",
+                background: active ? "#52b788" : "transparent",
+                flexShrink: 0,
+                transition: "background 0.2s ease",
+              }} />
+              <span style={{ flexShrink: 0 }}>
                 {item.icon}
               </span>
               <span style={{
                 fontSize: "13px",
-                fontWeight: active ? 600 : 500,
-                fontFamily: "'Satoshi', 'DM Sans', system-ui, sans-serif",
+                fontWeight: active ? 600 : 400,
+                fontFamily: "'DM Sans', system-ui, sans-serif",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               }}>
                 {item.title}
               </span>
-              {active && (
-                <div style={{
-                  marginLeft: "auto",
-                  width: "4px",
-                  height: "4px",
-                  borderRadius: "50%",
-                  background: "var(--accent-indigo)",
-                  flexShrink: 0,
-                }} />
-              )}
             </button>
           );
         })}
@@ -204,48 +204,50 @@ export default function Sidebar({ currentView, onNavigate }) {
       {/* Divider */}
       <div
         style={{
-          width: "140px",
+          width: "160px",
           height: "1px",
-          background: "var(--nm-shadow)",
-          opacity: 0.3,
+          background: "rgba(255,255,255,0.1)",
           margin: "4px 0",
         }}
       />
 
       {/* User avatar + name */}
       <div style={{
-        paddingBottom: "20px",
+        paddingBottom: "24px",
         paddingTop: "12px",
+        paddingLeft: "16px",
+        paddingRight: "16px",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
-        gap: "6px",
+        gap: "10px",
+        width: "100%",
       }}>
         <div
           style={{
-            width: "40px",
-            height: "40px",
+            width: "36px",
+            height: "36px",
             borderRadius: "50%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "linear-gradient(135deg, #6366f1, #818cf8, #a78bfa)",
-            boxShadow: "var(--nm-flat-sm)",
-            color: "white",
+            background: "rgba(82,183,136,0.25)",
+            border: "1.5px solid rgba(82,183,136,0.5)",
+            color: "#a8d5b8",
             fontWeight: "700",
             fontSize: "12px",
             userSelect: "none",
             cursor: "pointer",
+            flexShrink: 0,
           }}
           title="Dr. Rivera"
         >
           DR
         </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)" }}>
+        <div>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "white" }}>
             Dr. Rivera
           </div>
-          <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>
             Counselor
           </div>
         </div>
