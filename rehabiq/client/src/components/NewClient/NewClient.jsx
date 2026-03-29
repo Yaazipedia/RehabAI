@@ -10,10 +10,69 @@ const PROGRAM_TYPES = [
 ];
 
 const RISK_LEVELS = [
-  { value: "low", label: "Low", color: "var(--clr-success)" },
-  { value: "moderate", label: "Moderate", color: "var(--clr-warning)" },
-  { value: "high", label: "High", color: "var(--clr-danger)" },
+  {
+    value: "low",
+    label: "Low",
+    selectedBg: "var(--clr-success-light)",
+    selectedFg: "#2f6f4e",
+    selectedBorder: "var(--clr-success-border)",
+  },
+  {
+    value: "moderate",
+    label: "Moderate",
+    selectedBg: "var(--clr-warning-light)",
+    selectedFg: "#9a6b1a",
+    selectedBorder: "var(--clr-warning-border)",
+  },
+  {
+    value: "high",
+    label: "High",
+    selectedBg: "var(--clr-danger-light)",
+    selectedFg: "#b83838",
+    selectedBorder: "var(--clr-danger-border)",
+  },
 ];
+
+const SECTION_ICONS = {
+  basic: {
+    bg: "rgba(99, 102, 241, 0.12)",
+    color: "#5b5fc7",
+  },
+  program: {
+    bg: "rgba(16, 185, 129, 0.12)",
+    color: "var(--clr-success)",
+  },
+  objectives: {
+    bg: "rgba(232, 168, 56, 0.14)",
+    color: "var(--clr-warning)",
+  },
+};
+
+function SectionHeader({ title, children }) {
+  return (
+    <div className="flex items-center gap-2.5 mb-5">
+      {children}
+      <h3 className="text-sm font-bold" style={{ color: "var(--clr-slate)" }}>{title}</h3>
+    </div>
+  );
+}
+
+function SectionIcon({ children, tint = "basic" }) {
+  const { bg, color } = SECTION_ICONS[tint] ?? SECTION_ICONS.basic;
+  return (
+    <div
+      className="flex flex-shrink-0 items-center justify-center rounded-[9px]"
+      style={{
+        width: 32,
+        height: 32,
+        background: bg,
+        color,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function NewClient({ onBack, onClientCreated }) {
   const [form, setForm] = useState({
@@ -88,14 +147,14 @@ export default function NewClient({ onBack, onClientCreated }) {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Basic info */}
-        <div className="card mb-5" style={{ padding: "28px 28px 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--clr-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            </div>
-            <h3 className="text-sm font-bold" style={{ color: "var(--clr-slate)" }}>Basic information</h3>
-          </div>
+        <div className="card mb-6" style={{ padding: "28px" }}>
+          {/* Basic info */}
+          <div style={{ paddingBottom: 28 }}>
+            <SectionHeader title="Basic information">
+              <SectionIcon tint="basic">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              </SectionIcon>
+            </SectionHeader>
 
           <div className="grid grid-cols-2 gap-5">
             <div>
@@ -136,16 +195,15 @@ export default function NewClient({ onBack, onClientCreated }) {
                 value={form.coOccurring} onChange={(e) => updateField("coOccurring", e.target.value)} />
             </div>
           </div>
-        </div>
-
-        {/* Program info */}
-        <div className="card mb-5" style={{ padding: "28px 28px 24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--clr-success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
-            <h3 className="text-sm font-bold" style={{ color: "var(--clr-slate)" }}>Program details</h3>
           </div>
+
+          {/* Program info */}
+          <div style={{ borderTop: "1px solid var(--clr-border)", paddingTop: 28, paddingBottom: 28 }}>
+            <SectionHeader title="Program details">
+              <SectionIcon tint="program">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </SectionIcon>
+            </SectionHeader>
 
           <div className="grid grid-cols-2 gap-5">
             <div>
@@ -160,20 +218,30 @@ export default function NewClient({ onBack, onClientCreated }) {
               <label className="text-[11px] font-semibold uppercase tracking-wider block mb-2" style={{ color: "var(--clr-muted)" }}>
                 Initial risk level
               </label>
-              <div className="flex gap-2">
-                {RISK_LEVELS.map((r) => (
+              <div
+                className="flex gap-1 p-1 rounded-[10px] w-full box-border"
+                style={{
+                  border: "1.5px solid #d6e8db",
+                  background: "var(--bg-card)",
+                }}
+              >
+                {RISK_LEVELS.map((r) => {
+                  const active = form.riskLevel === r.value;
+                  return (
                   <button key={r.value} type="button"
                     onClick={() => updateField("riskLevel", r.value)}
-                    className="flex-1 rounded-lg text-[13px] font-medium transition-base text-center"
+                    className="flex-1 rounded-[8px] text-[13px] font-medium transition-base text-center"
                     style={{
-                      padding: "10px 4px",
-                      background: form.riskLevel === r.value ? r.color : "var(--clr-bg)",
-                      color: form.riskLevel === r.value ? "white" : "var(--clr-muted)",
-                      border: `1.5px solid ${form.riskLevel === r.value ? r.color : "var(--clr-border)"}`,
+                      padding: "8px 4px",
+                      background: active ? r.selectedBg : "transparent",
+                      color: active ? r.selectedFg : "var(--clr-muted)",
+                      border: active ? `1.5px solid ${r.selectedBorder}` : "1.5px solid transparent",
+                      cursor: "pointer",
                     }}>
                     {r.label}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -202,21 +270,15 @@ export default function NewClient({ onBack, onClientCreated }) {
             <input type="text" className="input-base" placeholder="e.g. Jane Smith (Mother) — (812) 555-0123"
               value={form.emergencyContact} onChange={(e) => updateField("emergencyContact", e.target.value)} />
           </div>
-        </div>
-
-        {/* Treatment plan objectives */}
-        <div className="card mb-6" style={{ padding: "28px 28px 24px" }}>
-          <div className="flex items-center justify-between mb-5">
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "rgba(245,158,11,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--clr-warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-              </div>
-              <h3 className="text-sm font-bold" style={{ color: "var(--clr-slate)" }}>Treatment plan objectives</h3>
-            </div>
-            <button type="button" onClick={addObjective} className="btn-outline" style={{ fontSize: "12px", padding: "5px 12px" }}>
-              + Add objective
-            </button>
           </div>
+
+          {/* Treatment plan objectives */}
+          <div style={{ borderTop: "1px solid var(--clr-border)", paddingTop: 28, paddingBottom: 24 }}>
+            <SectionHeader title="Treatment plan objectives">
+              <SectionIcon tint="objectives">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </SectionIcon>
+            </SectionHeader>
 
           <div className="space-y-2.5">
             {objectives.map((obj, i) => (
@@ -236,6 +298,19 @@ export default function NewClient({ onBack, onClientCreated }) {
                 )}
               </div>
             ))}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={addObjective}
+                className="text-[13px] font-medium transition-base"
+                style={{ color: "var(--clr-muted)", background: "none", border: "none", padding: "6px 0", cursor: "pointer", fontFamily: "inherit" }}
+                onMouseEnter={(e) => { e.target.style.color = "var(--clr-primary)"; }}
+                onMouseLeave={(e) => { e.target.style.color = "var(--clr-muted)"; }}
+              >
+                + Add objective
+              </button>
+            </div>
+          </div>
           </div>
         </div>
 
