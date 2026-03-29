@@ -53,8 +53,11 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
+      // Cross-site deployment (Vercel frontend + Render backend) requires
+      // sameSite: "none" + secure: true so the browser sends the session
+      // cookie on cross-origin requests.
       secure: isProd,
-      sameSite: "lax",
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
