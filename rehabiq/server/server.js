@@ -38,7 +38,10 @@ const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 // Middleware
 app.use(
   cors({
-    origin: clientOrigin,
+    origin: function (origin, callback) {
+      // Allow any origin for hackathon
+      callback(null, true);
+    },
     credentials: true,
   })
 );
