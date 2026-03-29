@@ -225,6 +225,33 @@ async function getSessionCount(clientId) {
   return row.count;
 }
 
+// Re-sequence session numbers per client from 1 upward (sorted by date then rowid)
+async function renumberAllSessions() {
+  await getDb();
+  const clients = stmtAll("SELECT id FROM clients");
+  let fixed = 0;
+  for (const { id: clientId } of clients) {
+    const sessions = stmtAll(
+      "SELECT id FROM sessions WHERE client_id = ? ORDER BY date ASC, rowid ASC",
+      [clientId]
+    );
+    sessions.forEach(({ id }, idx) => {
+      const newNum = idx + 1;
+      const existing = stmtGet("SELECT session_number FROM sessions WHERE id = ?", [id]);
+      if (existing && existing.session_number !== newNum) {
+        db.run("UPDATE sessions SET session_number = ? WHERE id = ?", [newNum, id]);
+        fixed++;
+      }
+    });
+  }
+  if (fixed > 0) {
+    persist();
+    console.log(`🔧 Renumbered ${fixed} session(s) to sequential order.`);
+  } else {
+    console.log("✅ Session numbers are already sequential.");
+  }
+}
+
 // ======================== FORMATTERS ========================
 
 function formatClientRow(row) {
@@ -299,5 +326,6 @@ module.exports = {
   getSessionsByClient,
   addSession,
   getSessionCount,
+  renumberAllSessions,
   isSeeded,
 };

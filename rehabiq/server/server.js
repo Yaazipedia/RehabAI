@@ -13,7 +13,10 @@ const outcomesRouter = require("./routes/outcomes");
 
 // Seed database on startup (async because sql.js init is async)
 const { seedDatabase } = require("./data/seed");
-seedDatabase().catch((err) => console.error("Seed error:", err));
+const { renumberAllSessions } = require("./data/database");
+seedDatabase()
+  .then(() => renumberAllSessions())
+  .catch((err) => console.error("Startup error:", err));
 
 const app = express();
 const PORT = process.env.PORT || 3001;

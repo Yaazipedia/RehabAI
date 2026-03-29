@@ -108,23 +108,6 @@ function UserAddIcon() {
     </svg>
   );
 }
-function ChartIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  );
-}
-function ClockIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
 function DownloadIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -249,8 +232,31 @@ function LogLine({ text, color, delay }) {
   );
 }
 
+/* ── Export CSV helper ────────────────────────────────────── */
+function exportClientsCSV(clients) {
+  const headers = [
+    "Name", "Age", "Gender", "Diagnosis", "Program Type",
+    "Program Day", "Risk Level", "Total Sessions", "Last Session Sentiment"
+  ];
+  const rows = clients.map(c => [
+    c.name, c.age, c.gender, c.diagnosis, c.programType,
+    c.programDay, c.riskLevel, c.totalSessions, c.lastSessionSentiment
+  ]);
+  const csv = [headers, ...rows]
+    .map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rehabiq-caseload-${new Date().toISOString().split("T")[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /* ── Main Dashboard ───────────────────────────────────────── */
-export default function Dashboard({ onSelectClient, onDocumentSession, onAddClient }) {
+export default function Dashboard({ onSelectClient, onDocumentSession, onAddClient, searchQuery = "" }) {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -259,7 +265,17 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
   }, []);
 
   const riskOrder = { high: 0, moderate: 1, low: 2 };
-  const sorted = [...clients].sort((a, b) => (riskOrder[a.riskLevel] ?? 3) - (riskOrder[b.riskLevel] ?? 3));
+  const allSorted = [...clients].sort((a, b) => (riskOrder[a.riskLevel] ?? 3) - (riskOrder[b.riskLevel] ?? 3));
+
+  // Filter by search query
+  const q = searchQuery.trim().toLowerCase();
+  const sorted = q
+    ? allSorted.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        (c.diagnosis || "").toLowerCase().includes(q) ||
+        (c.programType || "").toLowerCase().includes(q)
+      )
+    : allSorted;
 
   const high = clients.filter((c) => c.riskLevel === "high").length;
   const moderate = clients.filter((c) => c.riskLevel === "moderate").length;
@@ -293,7 +309,7 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
           ))}
         </div>
         <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="shimmer" style={{ height: "48px", flex: 1, borderRadius: "14px" }} />
           ))}
         </div>
@@ -454,22 +470,10 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
           onClick={onAddClient}
         />
         <QuickAction
-          label="Generate Report"
-          icon={<ChartIcon />}
-          gradient="var(--gradient-amber)"
-          onClick={() => {}}
-        />
-        <QuickAction
-          label="View Timeline"
-          icon={<ClockIcon />}
-          gradient="var(--gradient-rose)"
-          onClick={() => {}}
-        />
-        <QuickAction
           label="Export Data"
           icon={<DownloadIcon />}
-          gradient="var(--gradient-indigo)"
-          onClick={() => {}}
+          gradient="var(--gradient-amber)"
+          onClick={() => exportClientsCSV(clients)}
         />
       </div>
 
@@ -484,10 +488,30 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
       >
         {/* Left: Active Caseload */}
         <div>
-          <div className="section-label" style={{ marginBottom: "12px" }}>
-            Active Caseload
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <div className="section-label">
+              Active Caseload
+            </div>
+            {q && (
+              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                {sorted.length} result{sorted.length !== 1 ? "s" : ""} for "{searchQuery}"
+              </div>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {sorted.length === 0 && q && (
+              <div style={{
+                textAlign: "center",
+                padding: "40px 20px",
+                color: "var(--text-muted)",
+                fontSize: "14px",
+                background: "var(--nm-bg)",
+                boxShadow: "var(--nm-flat)",
+                borderRadius: "16px",
+              }}>
+                No clients match "<strong>{searchQuery}</strong>"
+              </div>
+            )}
             {sorted.map((client, idx) => (
               <div
                 key={client.id}

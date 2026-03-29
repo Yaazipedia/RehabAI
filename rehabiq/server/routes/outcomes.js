@@ -6,6 +6,9 @@ const { buildOutcomesPrompt } = require("../prompts/analyzeOutcomes");
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// In-memory cache: { [clientId]: { sessionCount: number, data: object } }
+const outcomesCache = new Map();
+
 // GET /api/outcomes/:clientId
 router.get("/:clientId", async (req, res) => {
   try {
@@ -31,8 +34,25 @@ router.get("/:clientId", async (req, res) => {
       });
     }
 
+    const sessionCount = client.sessions.length;
+    const cached = outcomesCache.get(client.id);
+
+    // Return cached result if session count hasn't changed
+    if (cached && cached.sessionCount === sessionCount) {
+      console.log(`📊 Returning cached outcomes for ${client.name} (${sessionCount} sessions)`);
+      return res.json({
+        success: true,
+        outcomes: cached.data,
+        clientId: client.id,
+        clientName: client.name,
+        sessionsAnalyzed: sessionCount,
+        analysisDate: new Date().toISOString(),
+        fromCache: true,
+      });
+    }
+
     const { systemPrompt, userPrompt } = buildOutcomesPrompt(client);
-    console.log(`\n📊 Analyzing outcomes for ${client.name}...`);
+    console.log(`\n📊 Analyzing outcomes for ${client.name} (${sessionCount} sessions)...`);
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -45,11 +65,15 @@ router.get("/:clientId", async (req, res) => {
     const cleaned = responseText.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
-    console.log(`✅ Outcomes analyzed for ${client.name}`);
+    // Store in cache
+    outcomesCache.set(client.id, { sessionCount, data: parsed });
+
+    console.log(`✅ Outcomes analyzed and cached for ${client.name}`);
     res.json({
       success: true, outcomes: parsed,
       clientId: client.id, clientName: client.name,
-      sessionsAnalyzed: client.sessions.length, analysisDate: new Date().toISOString(),
+      sessionsAnalyzed: sessionCount, analysisDate: new Date().toISOString(),
+      fromCache: false,
     });
   } catch (err) {
     console.error("Outcomes error:", err);

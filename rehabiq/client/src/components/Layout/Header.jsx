@@ -7,15 +7,6 @@ const PAGE_META = {
   newclient: { title: "Add Client", subtitle: "Register a new client" },
 };
 
-function BellIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  );
-}
-
 function SearchIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,14 +16,35 @@ function SearchIcon() {
   );
 }
 
-export default function Header({ currentView, darkMode, onToggleDark }) {
+function XIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+export default function Header({ currentView, darkMode, onToggleDark, onSearch }) {
   const [spinToggle, setSpinToggle] = useState(false);
+  const [query, setQuery] = useState("");
   const meta = PAGE_META[currentView] || PAGE_META.dashboard;
 
   function handleToggleDark() {
     setSpinToggle(true);
     onToggleDark();
     setTimeout(() => setSpinToggle(false), 500);
+  }
+
+  function handleSearchChange(e) {
+    const val = e.target.value;
+    setQuery(val);
+    if (onSearch) onSearch(val);
+  }
+
+  function clearSearch() {
+    setQuery("");
+    if (onSearch) onSearch("");
   }
 
   return (
@@ -58,7 +70,7 @@ export default function Header({ currentView, darkMode, onToggleDark }) {
         }}
       >
         {/* Left: page title */}
-        <div style={{ minWidth: "180px", flexShrink: 0 }}>
+        <div style={{ minWidth: "160px", flexShrink: 0 }}>
           <h2
             style={{
               fontFamily: "'General Sans', 'Satoshi', system-ui, sans-serif",
@@ -81,42 +93,64 @@ export default function Header({ currentView, darkMode, onToggleDark }) {
           </p>
         </div>
 
-        {/* Center: search */}
-        <div style={{ flex: 1, maxWidth: "420px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              borderRadius: "100px",
-              background: "var(--nm-bg)",
-              boxShadow: "var(--nm-inset)",
-              padding: "8px 16px",
-            }}
-          >
-            <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center" }}>
-              <SearchIcon />
-            </span>
-            <input
-              type="text"
-              placeholder="Search clients..."
+        {/* Center: search — only on dashboard */}
+        <div style={{ flex: 1, maxWidth: "440px" }}>
+          {currentView === "dashboard" && (
+            <div
               style={{
-                flex: 1,
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                fontSize: "14px",
-                fontFamily: "inherit",
-                color: "var(--text-primary)",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                borderRadius: "100px",
+                background: "var(--nm-bg)",
+                boxShadow: "var(--nm-inset)",
+                padding: "8px 16px",
               }}
-            />
-          </div>
+            >
+              <span style={{ color: "var(--text-muted)", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <SearchIcon />
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={handleSearchChange}
+                placeholder="Search clients by name or diagnosis..."
+                style={{
+                  flex: 1,
+                  border: "none",
+                  outline: "none",
+                  background: "transparent",
+                  fontSize: "14px",
+                  fontFamily: "inherit",
+                  color: "var(--text-primary)",
+                }}
+              />
+              {query && (
+                <button
+                  onClick={clearSearch}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "2px",
+                    color: "var(--text-muted)",
+                    display: "flex",
+                    alignItems: "center",
+                    flexShrink: 0,
+                    borderRadius: "50%",
+                  }}
+                >
+                  <XIcon />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Right: actions */}
+        {/* Right: theme toggle + avatar only */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {/* Theme toggle */}
           <button
@@ -153,49 +187,6 @@ export default function Header({ currentView, darkMode, onToggleDark }) {
             >
               {darkMode ? "☀️" : "🌙"}
             </span>
-          </button>
-
-          {/* Notification bell */}
-          <button
-            title="Notifications"
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "12px",
-              border: "none",
-              background: "var(--nm-bg)",
-              boxShadow: "var(--nm-button)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-secondary)",
-              position: "relative",
-              transition: "box-shadow 0.2s cubic-bezier(0.34,1.56,0.64,1), transform 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "6px 6px 14px var(--nm-shadow), -6px -6px 14px var(--nm-highlight)";
-              e.currentTarget.style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "var(--nm-button)";
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
-            <BellIcon />
-            {/* Rose notification dot */}
-            <span
-              style={{
-                position: "absolute",
-                top: "8px",
-                right: "8px",
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                background: "var(--accent-rose)",
-                animation: "pulseDot 1.5s ease-in-out infinite",
-              }}
-            />
           </button>
 
           {/* Avatar */}

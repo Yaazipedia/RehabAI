@@ -10,6 +10,7 @@ export default function App() {
   const [view, setView] = useState("dashboard");
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
@@ -18,6 +19,8 @@ export default function App() {
   function navigateTo(newView, clientId = null) {
     setView(newView);
     if (clientId) setSelectedClientId(clientId);
+    // Clear search when navigating away from dashboard
+    if (newView !== "dashboard") setSearchQuery("");
   }
 
   return (
@@ -28,9 +31,11 @@ export default function App() {
           currentView={view}
           darkMode={darkMode}
           onToggleDark={() => setDarkMode((d) => !d)}
+          onSearch={setSearchQuery}
         />
         {view === "dashboard" && (
           <Dashboard
+            searchQuery={searchQuery}
             onSelectClient={(id) => navigateTo("client", id)}
             onDocumentSession={(id) => navigateTo("session", id)}
             onAddClient={() => navigateTo("newclient")}

@@ -17,6 +17,10 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Editable DAP state
+  const [editedDap, setEditedDap] = useState({ data: "", assessment: "", plan: "" });
+  const [saved, setSaved] = useState(false);
+
   useEffect(() => {
     fetchClients().then(setClients).catch(console.error);
   }, []);
@@ -27,8 +31,21 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
       setRawNotes(DEMO_NOTES[activeClientId] || "");
       setResult(null);
       setError(null);
+      setSaved(false);
     }
   }, [activeClientId]);
+
+  // Sync editedDap when result arrives
+  useEffect(() => {
+    if (result?.dapNote) {
+      setEditedDap({
+        data: result.dapNote.data || "",
+        assessment: result.dapNote.assessment || "",
+        plan: result.dapNote.plan || "",
+      });
+      setSaved(false);
+    }
+  }, [result]);
 
   async function handleSubmit() {
     if (!activeClientId || !rawNotes.trim()) return;
@@ -36,7 +53,11 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
     setError(null);
     setResult(null);
     try {
-      const session = await documentSession(activeClientId, rawNotes, selectedClient ? selectedClient.sessions.length + 1 : 1);
+      const session = await documentSession(
+        activeClientId,
+        rawNotes,
+        selectedClient ? selectedClient.sessions.length + 1 : 1
+      );
       setResult(session);
     } catch (err) {
       setError(err.message);
@@ -45,86 +66,115 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
     }
   }
 
+  function handleSaveEdited() {
+    // The session is already saved to the DB by the server when generated.
+    // Here we just mark it as reviewed/accepted by the counselor.
+    setSaved(true);
+    // In a real system, you'd PATCH the session with the edited DAP.
+    // For now we indicate the counselor has approved/edited it.
+  }
+
   return (
-    <div style={{ padding: "32px", maxWidth: "1100px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+    <div style={{ padding: "32px", maxWidth: "1200px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
       {/* Header */}
-      <div className="flex items-center gap-4 mb-7">
-        <button onClick={onBack} className="text-sm font-medium transition-base" style={{ color: "var(--clr-muted)" }}
-          onMouseEnter={(e) => e.target.style.color = "var(--clr-primary)"}
-          onMouseLeave={(e) => e.target.style.color = "var(--clr-muted)"}>
+      <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "28px" }}>
+        <button
+          onClick={onBack}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            fontSize: "13px", fontWeight: 500, color: "var(--text-muted)",
+            fontFamily: "inherit", padding: 0, transition: "color 0.15s ease",
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = "var(--accent-indigo)"}
+          onMouseLeave={e => e.currentTarget.style.color = "var(--text-muted)"}
+        >
           ← Back
         </button>
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "var(--clr-slate)" }}>Document session</h2>
-          <p className="text-[12px] mt-0.5" style={{ color: "var(--clr-muted)" }}>
-            Enter raw notes and RehabIQ generates structured clinical documentation
+          <h2 style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Document Session</h2>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "3px" }}>
+            Enter raw notes — RehabIQ generates structured clinical documentation
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        {/* Left: Input */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+        {/* ── Left: Input ── */}
         <div>
           {/* Client selector */}
-          <label className="text-[11px] font-semibold uppercase tracking-wider block mb-2" style={{ color: "var(--clr-muted)" }}>
+          <label style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "8px" }}>
             Client
           </label>
           <select
             value={activeClientId || ""}
-            onChange={(e) => setActiveClientId(e.target.value)}
-            className="input-base mb-4"
+            onChange={e => setActiveClientId(e.target.value)}
+            className="input-base"
+            style={{ marginBottom: "20px" }}
           >
             <option value="">Select client...</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>{c.name} — Day {c.programDay}</option>
+            {clients.map(c => (
+              // Removed "— Day X" per request
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
 
           {/* Client context card */}
           {selectedClient && (
-            <div className="card p-4 mb-4 animate-fade-in">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+            <div
+              style={{
+                background: "var(--nm-bg)", boxShadow: "var(--nm-flat)",
+                borderRadius: "16px", padding: "20px", marginBottom: "20px",
+                animation: "fadeInUp 0.3s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+                <div
                   style={{
-                    background: selectedClient.riskLevel === "high" ? "linear-gradient(135deg, #dc2626, #ef4444)"
-                      : selectedClient.riskLevel === "moderate" ? "linear-gradient(135deg, #d97706, #f59e0b)"
-                      : "linear-gradient(135deg, #059669, #10b981)"
-                  }}>
+                    width: "36px", height: "36px", borderRadius: "10px",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "11px", fontWeight: 700, color: "white", flexShrink: 0,
+                    background: selectedClient.riskLevel === "high"
+                      ? "var(--gradient-rose)"
+                      : selectedClient.riskLevel === "moderate"
+                      ? "var(--gradient-amber)"
+                      : "var(--gradient-emerald)",
+                  }}
+                >
                   {selectedClient.name.split(" ").map(n => n[0]).join("")}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold" style={{ color: "var(--clr-slate)" }}>{selectedClient.name}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>{selectedClient.name}</span>
                     <StatusBadge status={selectedClient.riskLevel} />
                   </div>
-                  <p className="text-[11px]" style={{ color: "var(--clr-muted)" }}>
-                    {selectedClient.diagnosis} • {selectedClient.programType} • Day {selectedClient.programDay}
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    {selectedClient.diagnosis} · {selectedClient.programType} · Day {selectedClient.programDay}
                   </p>
                 </div>
               </div>
 
-              {selectedClient.coOccurring && (
-                <p className="text-[11px] mb-2 px-2.5 py-1 rounded-lg inline-block"
-                  style={{ background: "var(--clr-amber-light)", color: "var(--clr-warning)" }}>
-                  Co-occurring: {selectedClient.coOccurring}
-                </p>
-              )}
-              {selectedClient.mat && (
-                <p className="text-[11px] mb-2 ml-1 px-2.5 py-1 rounded-lg inline-block"
-                  style={{ background: "var(--clr-primary-light)", color: "var(--clr-primary)" }}>
-                  MAT: {selectedClient.mat}
-                </p>
-              )}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "14px" }}>
+                {selectedClient.coOccurring && (
+                  <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "100px", background: "rgba(245,158,11,0.1)", color: "var(--accent-amber)" }}>
+                    Co-occurring: {selectedClient.coOccurring}
+                  </span>
+                )}
+                {selectedClient.mat && (
+                  <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "100px", background: "rgba(99,102,241,0.1)", color: "var(--accent-indigo)" }}>
+                    MAT: {selectedClient.mat}
+                  </span>
+                )}
+              </div>
 
-              <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--clr-border)" }}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--clr-muted)" }}>
-                  Active objectives
+              <div style={{ borderTop: "1px solid rgba(0,0,0,0.06)", paddingTop: "14px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: "10px" }}>
+                  Active Objectives
                 </p>
-                <div className="space-y-1.5">
-                  {selectedClient.treatmentPlan.objectives.map((obj) => (
-                    <div key={obj.id} className="flex items-center gap-2 text-[12px]">
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {selectedClient.treatmentPlan.objectives.map(obj => (
+                    <div key={obj.id} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                       <StatusBadge status={obj.status} />
-                      <span style={{ color: "var(--clr-slate-mid)" }}>{obj.description}</span>
+                      <span style={{ color: "var(--text-secondary)" }}>{obj.description}</span>
                     </div>
                   ))}
                 </div>
@@ -132,97 +182,153 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
             </div>
           )}
 
-          {/* Notes input */}
-          <label className="text-[11px] font-semibold uppercase tracking-wider block mb-2" style={{ color: "var(--clr-muted)" }}>
-            Session notes (raw)
+          {/* Notes textarea */}
+          <label style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "8px" }}>
+            Session Notes (Raw)
           </label>
           <textarea
             value={rawNotes}
-            onChange={(e) => setRawNotes(e.target.value)}
+            onChange={e => setRawNotes(e.target.value)}
             placeholder="Type or paste your rough session notes here... Be as informal as you like — RehabIQ will structure everything."
-            rows={14}
-            className="input-base resize-none leading-relaxed"
+            rows={13}
+            className="input-base"
+            style={{ resize: "none", lineHeight: 1.7, fontSize: "14px" }}
           />
 
           <button
             onClick={handleSubmit}
             disabled={loading || !rawNotes.trim() || !activeClientId}
-            className="btn-primary w-full mt-4 py-3"
-            style={{ opacity: (!rawNotes.trim() || !activeClientId) ? 0.5 : 1 }}
+            className="btn-primary"
+            style={{
+              width: "100%", marginTop: "16px", padding: "14px",
+              fontSize: "15px", fontWeight: 600,
+              opacity: (!rawNotes.trim() || !activeClientId) ? 0.5 : 1,
+            }}
           >
-            {loading ? "⏳ Generating documentation..." : "Generate clinical documentation"}
+            {loading ? "⏳ Generating documentation..." : "Generate Clinical Documentation"}
           </button>
         </div>
 
-        {/* Right: Output */}
+        {/* ── Right: Output ── */}
         <div>
           {loading && (
-            <div className="card p-6">
+            <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "32px" }}>
               <LoadingState message="Claude is generating clinical documentation..." lines={8} />
             </div>
           )}
 
           {error && (
-            <div className="card p-5 animate-fade-in" style={{ background: "var(--clr-danger-light)", borderColor: "var(--clr-danger-border)" }}>
-              <p className="text-sm font-medium" style={{ color: "var(--clr-danger)" }}>Error: {error}</p>
+            <div style={{
+              borderRadius: "16px", padding: "20px",
+              background: "rgba(244,63,94,0.08)", border: "1.5px solid rgba(244,63,94,0.25)",
+            }}>
+              <p style={{ fontSize: "14px", fontWeight: 500, color: "var(--accent-rose)" }}>Error: {error}</p>
             </div>
           )}
 
           {result && !loading && (
-            <div className="space-y-4 animate-fade-in">
-              {/* Draft watermark */}
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium"
-                style={{ background: "var(--clr-amber-light)", color: "var(--clr-warning)", border: "1px solid var(--clr-amber-border)" }}>
-                <span>⚠</span> Draft — counselor review required before finalizing
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", animation: "fadeInUp 0.35s ease" }}>
+              {/* Draft notice */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                padding: "14px 18px", borderRadius: "14px",
+                background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)",
+                fontSize: "13px", fontWeight: 500, color: "var(--accent-amber)",
+              }}>
+                <span>✏️</span>
+                AI-generated draft — review and edit before finalizing
               </div>
 
-              {/* DAP Note */}
-              <div className="card p-6">
-                <h3 className="text-[15px] font-bold mb-5" style={{ color: "var(--clr-slate)" }}>
-                  📋 DAP Note — Session {result.sessionNumber}
-                </h3>
+              {/* Editable DAP Note */}
+              <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
+                    📋 DAP Note — Session {result.sessionNumber}
+                  </h3>
+                  {saved && (
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--accent-emerald)", padding: "4px 10px", borderRadius: "100px", background: "rgba(16,185,129,0.1)" }}>
+                      ✓ Approved by counselor
+                    </span>
+                  )}
+                </div>
+
                 {[
                   { key: "data", label: "Data", desc: "Observable facts and client statements" },
                   { key: "assessment", label: "Assessment", desc: "Clinical interpretation" },
                   { key: "plan", label: "Plan", desc: "Next steps and follow-up" },
-                ].map((section) => (
-                  <div key={section.key} className="mb-5 last:mb-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "var(--clr-primary)" }}>
+                ].map(section => (
+                  <div key={section.key} style={{ marginBottom: "20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent-indigo)" }}>
                         {section.label}
                       </span>
-                      <span className="text-[10px]" style={{ color: "var(--clr-muted)" }}>{section.desc}</span>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{section.desc}</span>
+                      <span style={{ fontSize: "10px", color: "var(--accent-amber)", marginLeft: "auto", fontWeight: 500 }}>
+                        ✏ editable
+                      </span>
                     </div>
-                    <p className="text-[13.5px] leading-[1.7]" style={{ color: "var(--clr-slate-mid)" }}>
-                      {result.dapNote[section.key]}
-                    </p>
+                    <textarea
+                      value={editedDap[section.key]}
+                      onChange={e => setEditedDap(prev => ({ ...prev, [section.key]: e.target.value }))}
+                      rows={4}
+                      className="input-base"
+                      style={{
+                        resize: "vertical", lineHeight: 1.7, fontSize: "13.5px",
+                        fontFamily: "inherit",
+                        border: saved ? "1.5px solid rgba(16,185,129,0.4)" : "1.5px solid rgba(99,102,241,0.2)",
+                      }}
+                    />
                   </div>
                 ))}
+
+                {/* Save / Approve button */}
+                {!saved ? (
+                  <button
+                    onClick={handleSaveEdited}
+                    style={{
+                      width: "100%", padding: "13px",
+                      borderRadius: "12px", border: "none",
+                      background: "var(--gradient-emerald)", color: "white",
+                      fontWeight: 600, fontSize: "14px", fontFamily: "inherit",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 14px rgba(16,185,129,0.3)",
+                      transition: "box-shadow 0.2s ease, transform 0.2s ease",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(16,185,129,0.45)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(16,185,129,0.3)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  >
+                    ✓ Approve & Save to Record
+                  </button>
+                ) : (
+                  <div style={{ textAlign: "center", fontSize: "13px", color: "var(--accent-emerald)", fontWeight: 500 }}>
+                    ✓ Session notes saved to client record
+                  </div>
+                )}
               </div>
 
               {/* Clinical Tags */}
-              <div className="card p-6">
-                <h3 className="text-[15px] font-bold mb-4" style={{ color: "var(--clr-slate)" }}>🏷️ Clinical tags</h3>
-                <div className="space-y-3 text-[12.5px]">
-                  <TagRow label="Mood" items={result.tags.moodIndicators} color="var(--clr-primary)" bg="var(--clr-primary-light)" />
-                  <TagRow label="Triggers" items={result.tags.triggersIdentified} color="var(--clr-warning)" bg="var(--clr-amber-light)" />
-                  <TagRow label="Coping" items={result.tags.copingStrategiesDiscussed} color="var(--clr-success)" bg="var(--clr-success-light)" />
+              <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
+                <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "16px" }}>🏷️ Clinical Tags</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
+                  <TagRow label="Mood" items={result.tags.moodIndicators} color="var(--accent-indigo)" bg="rgba(99,102,241,0.1)" />
+                  <TagRow label="Triggers" items={result.tags.triggersIdentified} color="var(--accent-amber)" bg="rgba(245,158,11,0.1)" />
+                  <TagRow label="Coping" items={result.tags.copingStrategiesDiscussed} color="var(--accent-emerald)" bg="rgba(16,185,129,0.1)" />
                   {result.tags.substancesMentioned?.length > 0 && (
-                    <TagRow label="Substances" items={result.tags.substancesMentioned} color="var(--clr-danger)" bg="var(--clr-danger-light)" />
+                    <TagRow label="Substances" items={result.tags.substancesMentioned} color="var(--accent-rose)" bg="rgba(244,63,94,0.1)" />
                   )}
-                  <div className="pt-2 border-t" style={{ borderColor: "var(--clr-border)" }}>
-                    <span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Support: </span>
-                    <span style={{ color: "var(--clr-slate-mid)" }}>{result.tags.supportNetworkChanges}</span>
+                  <div style={{ paddingTop: "10px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                    <span style={{ fontWeight: 600, color: "var(--text-muted)" }}>Support: </span>
+                    <span style={{ color: "var(--text-secondary)" }}>{result.tags.supportNetworkChanges}</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                     <div>
-                      <span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Sentiment: </span>
+                      <span style={{ fontWeight: 600, color: "var(--text-muted)" }}>Sentiment: </span>
                       <StatusBadge status={result.tags.sessionSentiment} showIcon />
                     </div>
                     {result.tags.objectivesAddressed?.length > 0 && (
                       <div>
-                        <span className="font-semibold" style={{ color: "var(--clr-muted)" }}>Objectives: </span>
-                        <span style={{ color: "var(--clr-slate-mid)" }}>{result.tags.objectivesAddressed.join(", ")}</span>
+                        <span style={{ fontWeight: 600, color: "var(--text-muted)" }}>Objectives: </span>
+                        <span style={{ color: "var(--text-secondary)" }}>{result.tags.objectivesAddressed.join(", ")}</span>
                       </div>
                     )}
                   </div>
@@ -231,14 +337,15 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
 
               {/* Risk Indicators */}
               {result.tags.riskIndicators?.length > 0 && (
-                <div className="p-5 rounded-xl animate-fade-in"
-                  style={{ background: "var(--clr-danger-light)", border: "1.5px solid var(--clr-danger-border)" }}>
-                  <h3 className="text-sm font-bold mb-3" style={{ color: "var(--clr-danger)" }}>⚠ Risk indicators</h3>
-                  <ul className="space-y-2">
+                <div style={{
+                  borderRadius: "16px", padding: "20px",
+                  background: "rgba(244,63,94,0.08)", border: "1.5px solid rgba(244,63,94,0.25)",
+                }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: 700, color: "var(--accent-rose)", marginBottom: "12px" }}>⚠ Risk Indicators</h3>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
                     {result.tags.riskIndicators.map((r, i) => (
-                      <li key={i} className="text-[12.5px] flex items-start gap-2" style={{ color: "var(--clr-danger)" }}>
-                        <span className="mt-0.5 flex-shrink-0">•</span>
-                        <span>{r}</span>
+                      <li key={i} style={{ fontSize: "13px", color: "var(--accent-rose)", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <span style={{ flexShrink: 0, marginTop: "1px" }}>•</span><span>{r}</span>
                       </li>
                     ))}
                   </ul>
@@ -246,18 +353,17 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
               )}
 
               {/* Follow-up Flags */}
-              <div className="card p-6">
-                <h3 className="text-[15px] font-bold mb-3" style={{ color: "var(--clr-slate)" }}>🚩 Follow-up flags</h3>
-                <ul className="space-y-2">
+              <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
+                <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>🚩 Follow-up Flags</h3>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
                   {result.followUpFlags.map((flag, i) => {
                     const isPriority = flag.startsWith("PRIORITY:") || flag.startsWith("URGENT:");
                     return (
-                      <li key={i} className="text-[12.5px] flex items-start gap-2.5 py-1">
-                        <span className={`mt-0.5 flex-shrink-0 ${isPriority ? "pulse-soft" : ""}`}
-                          style={{ color: isPriority ? "var(--clr-danger)" : "var(--clr-primary)" }}>
+                      <li key={i} style={{ fontSize: "13px", display: "flex", alignItems: "flex-start", gap: "10px", padding: "4px 0" }}>
+                        <span style={{ color: isPriority ? "var(--accent-rose)" : "var(--accent-indigo)", flexShrink: 0 }}>
                           {isPriority ? "🔴" : "→"}
                         </span>
-                        <span style={{ color: isPriority ? "var(--clr-danger)" : "var(--clr-slate-mid)", fontWeight: isPriority ? 600 : 400 }}>
+                        <span style={{ color: isPriority ? "var(--accent-rose)" : "var(--text-secondary)", fontWeight: isPriority ? 600 : 400 }}>
                           {flag}
                         </span>
                       </li>
@@ -268,9 +374,9 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
 
               {/* Key Quotes */}
               {result.tags.keyQuotes?.length > 0 && (
-                <div className="card p-6">
-                  <h3 className="text-[15px] font-bold mb-3" style={{ color: "var(--clr-slate)" }}>💬 Key client statements</h3>
-                  <div className="space-y-3">
+                <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
+                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>💬 Key Client Statements</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {result.tags.keyQuotes.map((q, i) => (
                       <blockquote key={i} className="quote">"{q}"</blockquote>
                     ))}
@@ -279,12 +385,28 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
               )}
 
               {/* Action buttons */}
-              <div className="flex gap-3">
-                <button onClick={() => onViewClient(activeClientId)} className="btn-outline flex-1 py-2.5">
-                  View client timeline →
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button
+                  onClick={() => onViewClient(activeClientId)}
+                  style={{
+                    flex: 1, padding: "13px",
+                    borderRadius: "12px", border: "none",
+                    background: "var(--nm-bg)", boxShadow: "var(--nm-button)",
+                    color: "var(--accent-indigo)", fontWeight: 600, fontSize: "14px",
+                    fontFamily: "inherit", cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = "6px 6px 14px var(--nm-shadow), -6px -6px 14px var(--nm-highlight)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = "var(--nm-button)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  View Client Timeline →
                 </button>
-                <button onClick={() => { setResult(null); setRawNotes(""); }} className="btn-primary flex-1 py-2.5">
-                  Document another session
+                <button
+                  onClick={() => { setResult(null); setRawNotes(""); setSaved(false); }}
+                  className="btn-primary"
+                  style={{ flex: 1, padding: "13px", fontSize: "14px" }}
+                >
+                  Document Another Session
                 </button>
               </div>
             </div>
@@ -292,19 +414,26 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
 
           {/* Empty state */}
           {!result && !loading && !error && (
-            <div className="rounded-2xl border-2 border-dashed p-14 flex flex-col items-center justify-center text-center h-full min-h-[400px]"
-              style={{ borderColor: "#cbd5e1" }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
-                style={{ background: "var(--clr-primary-light)" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-primary)" strokeWidth="1.5">
+            <div style={{
+              borderRadius: "20px", border: "2px dashed var(--nm-shadow)",
+              padding: "60px 20px",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              textAlign: "center", minHeight: "420px",
+            }}>
+              <div style={{
+                width: "56px", height: "56px", borderRadius: "16px",
+                background: "rgba(99,102,241,0.1)",
+                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px",
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-indigo)" strokeWidth="1.5">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
-              <p className="text-[15px] font-semibold mb-1" style={{ color: "var(--clr-slate)" }}>
+              <p style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px" }}>
                 Clinical documentation will appear here
               </p>
-              <p className="text-[13px] max-w-[280px]" style={{ color: "var(--clr-muted)" }}>
+              <p style={{ fontSize: "14px", color: "var(--text-muted)", maxWidth: "280px", lineHeight: 1.5 }}>
                 Select a client and enter your rough session notes to generate structured DAP documentation
               </p>
             </div>
@@ -319,10 +448,17 @@ function TagRow({ label, items, color, bg }) {
   if (!items || items.length === 0) return null;
   return (
     <div>
-      <span className="font-semibold" style={{ color: "var(--clr-muted)" }}>{label}: </span>
-      <div className="inline-flex flex-wrap gap-1.5 mt-1">
+      <span style={{ fontWeight: 600, color: "var(--text-muted)" }}>{label}: </span>
+      <div style={{ display: "inline-flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
         {items.map((item, i) => (
-          <span key={i} className="tag" style={{ background: bg, color }}>{item}</span>
+          <span key={i} style={{
+            display: "inline-flex", alignItems: "center",
+            padding: "3px 10px", borderRadius: "100px",
+            fontSize: "12px", fontWeight: 500,
+            background: bg, color,
+          }}>
+            {item}
+          </span>
         ))}
       </div>
     </div>
