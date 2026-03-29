@@ -595,7 +595,7 @@ function OutcomesPanel({ outcomes, loading }) {
           <p style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", marginBottom: "20px" }}>
             Recovery Domains — Radar View
           </p>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "32px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "24px" }}>
             {domains.length >= 3 && <RadarChart domains={domains} />}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "14px" }}>
               {domains.map((d, i) => (
@@ -774,7 +774,7 @@ function RadarChart({ domains }) {
   const SIZE = 260;
   const CX = SIZE / 2, CY = SIZE / 2;
   const R = 80;          // polygon radius
-  const LABEL_R = R + 34; // labels further out to avoid clipping
+  const LABEL_R = R + 30; // slightly tighter so labels sit closer; overflow visible + padding handles edges
   const count = Math.min(domains.length, 6);
   const domainSlice = domains.slice(0, count);
 
@@ -798,7 +798,15 @@ function RadarChart({ domains }) {
   const dataPath = dataPoints.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + " Z";
 
   return (
-    <svg width={SIZE} height={SIZE} style={{ flexShrink: 0 }}>
+    <div
+      style={{
+        flexShrink: 0,
+        padding: "4px 14px",
+        overflow: "visible",
+        alignSelf: "center",
+      }}
+    >
+    <svg width={SIZE} height={SIZE} style={{ display: "block", overflow: "visible" }}>
       {/* Grid rings */}
       {rings.map((r, ri) => {
         const pts = axes.map(({ angle }) => polar(angle, R * r));
@@ -833,15 +841,16 @@ function RadarChart({ domains }) {
             x={pos.x.toFixed(1)} y={pos.y.toFixed(1)}
             textAnchor={anchor}
             dominantBaseline="central"
-            fontSize={9.5} fontWeight={600}
+            fontSize={8.25} fontWeight={600}
             fill="var(--text-secondary)"
           >
-            <tspan x={pos.x.toFixed(1)} dy="-0.55em">{line1}</tspan>
-            {line2 && <tspan x={pos.x.toFixed(1)} dy="1.2em">{line2}</tspan>}
+            <tspan x={pos.x.toFixed(1)} dy="-0.5em">{line1}</tspan>
+            {line2 && <tspan x={pos.x.toFixed(1)} dy="1.15em">{line2}</tspan>}
           </text>
         );
       })}
     </svg>
+    </div>
   );
 }
 
