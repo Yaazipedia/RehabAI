@@ -60,9 +60,9 @@ export default function ClientView({ clientId, onBack, onDocumentSession }) {
   );
 
   const tabs = [
-    { id: "briefing", label: "Briefing", icon: "📋" },
-    { id: "timeline", label: "Timeline", icon: "📅" },
-    { id: "outcomes", label: "Outcomes", icon: "📊" },
+    { id: "briefing", label: "Briefing", icon: null },
+    { id: "timeline", label: "Timeline", icon: null },
+    { id: "outcomes", label: "Outcomes", icon: null },
   ];
 
   return (
@@ -148,7 +148,6 @@ export default function ClientView({ clientId, onBack, onDocumentSession }) {
             boxShadow: tab === t.id ? "var(--nm-flat-sm)" : "none",
             transition: "all 0.2s ease",
           }}>
-            <span style={{ fontSize: "16px" }}>{t.icon}</span>
             {t.label}
           </button>
         ))}
@@ -193,16 +192,23 @@ function BriefingPanel({ briefing, loading }) {
   return (
     <div style={{ animation: "fadeInUp 0.35s ease forwards" }}>
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-        {[{ id: "quick", label: "⚡ Quick Glance" }, { id: "full", label: "📖 Full Briefing" }].map(t => (
+        {[
+          { id: "quick", label: "Quick Glance", svgPath: "M13 2L3 14h9l-1 8 10-12h-9l1-8z" },
+          { id: "full", label: "Full Briefing", svgPath: "M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" },
+        ].map(t => (
           <button key={t.id} onClick={() => setSubTab(t.id)} style={{
-            padding: "12px 28px", borderRadius: "12px", fontSize: "14px",
+            padding: "11px 24px", borderRadius: "12px", fontSize: "14px",
             fontWeight: subTab === t.id ? 600 : 500, fontFamily: "inherit",
             border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: "8px",
             background: subTab === t.id ? "var(--gradient-indigo)" : "var(--nm-bg)",
             color: subTab === t.id ? "white" : "var(--text-secondary)",
             boxShadow: subTab === t.id ? "0 4px 14px rgba(99,102,241,0.35)" : "var(--nm-button)",
             transition: "all 0.2s ease",
           }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {t.id === "quick" ? <><path d={t.svgPath}/></> : <><path d={t.svgPath}/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>}
+            </svg>
             {t.label}
           </button>
         ))}
@@ -411,7 +417,11 @@ function TimelinePanel({ sessions, expanded, setExpanded }) {
                   </div>
                   {/* One-line session summary */}
                   {summary && !isOpen && (
-                    <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
+                    <p style={{
+                      fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      maxWidth: "100%",
+                    }}>
                       {summary}
                     </p>
                   )}
@@ -449,7 +459,9 @@ function TimelinePanel({ sessions, expanded, setExpanded }) {
                     <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
                       {s.followUpFlags.map((f, i) => {
                         const urgent = f.startsWith("PRIORITY:") || f.startsWith("URGENT:");
-                        return <p key={i} style={{ fontSize: "13px", color: urgent ? "var(--accent-rose)" : "var(--text-secondary)", fontWeight: urgent ? 600 : 400, marginBottom: "4px" }}>{urgent ? "🔴 " : "→ "}{f}</p>;
+                        return <p key={i} style={{ fontSize: "13px", color: urgent ? "var(--accent-rose)" : "var(--text-secondary)", fontWeight: urgent ? 600 : 400, marginBottom: "4px", display: "flex", alignItems: "flex-start", gap: "6px" }}>
+                          <span style={{ flexShrink: 0 }}>{urgent ? "●" : "→"}</span><span>{f}</span>
+                        </p>;
                       })}
                     </div>
                   )}
@@ -628,7 +640,12 @@ function OutcomesPanel({ outcomes, loading }) {
               ];
               // Effectiveness label
               const effectLabel = score >= 75 ? "Highly effective" : score >= 50 ? "Moderately effective" : "Needs review";
-              const effectEmoji = score >= 75 ? "✅" : score >= 50 ? "⚡" : "⚠️";
+              // Use SVG icons instead of emojis
+              const effectIconPath = score >= 75
+                ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"  // check circle
+                : score >= 50
+                ? "M13 10V3L4 14h7v7l9-11h-7z"                      // bolt
+                : "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"; // warning
 
               return (
                 <div key={i} style={{
@@ -642,9 +659,11 @@ function OutcomesPanel({ outcomes, loading }) {
                       width: "36px", height: "36px", borderRadius: "10px",
                       background: gradients[i % 3],
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0, fontSize: "16px",
+                      flexShrink: 0,
                     }}>
-                      {effectEmoji}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d={effectIconPath} />
+                      </svg>
                     </div>
                     <div style={{
                       fontSize: "28px", fontWeight: 800, color,
@@ -750,12 +769,12 @@ function MiniGauge({ score, color }) {
   );
 }
 
-/* ── Radar Chart — fixed labels outside chart ──────────── */
+/* ── Radar Chart — fixed labels with multi-word wrapping ───────────── */
 function RadarChart({ domains }) {
-  const SIZE = 200;
+  const SIZE = 260;
   const CX = SIZE / 2, CY = SIZE / 2;
-  const R = 72;         // polygon radius
-  const LABEL_R = R + 22; // labels further out
+  const R = 80;          // polygon radius
+  const LABEL_R = R + 34; // labels further out to avoid clipping
   const count = Math.min(domains.length, 6);
   const domainSlice = domains.slice(0, count);
 
@@ -801,13 +820,14 @@ function RadarChart({ domains }) {
         <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={4} fill="var(--accent-indigo)" stroke="white" strokeWidth={1.5} />
       ))}
 
-      {/* Labels — placed outside with fixed anchor logic */}
-      {axes.map(({ angle, label, value }, i) => {
+      {/* Labels — split into words and wrap up to 2 lines */}
+      {axes.map(({ angle, label }, i) => {
         const pos = polar(angle, LABEL_R);
-        // Determine text-anchor based on horizontal position
         const anchor = pos.x < CX - 5 ? "end" : pos.x > CX + 5 ? "start" : "middle";
-        // Shorten to first word only if label is long
-        const short = label.split(" ")[0];
+        // Split into at most 2 lines
+        const words = label.split(" ");
+        const line1 = words.slice(0, Math.ceil(words.length / 2)).join(" ");
+        const line2 = words.slice(Math.ceil(words.length / 2)).join(" ");
         return (
           <text key={i}
             x={pos.x.toFixed(1)} y={pos.y.toFixed(1)}
@@ -816,7 +836,8 @@ function RadarChart({ domains }) {
             fontSize={9.5} fontWeight={600}
             fill="var(--text-secondary)"
           >
-            {short}
+            <tspan x={pos.x.toFixed(1)} dy="-0.55em">{line1}</tspan>
+            {line2 && <tspan x={pos.x.toFixed(1)} dy="1.2em">{line2}</tspan>}
           </text>
         );
       })}

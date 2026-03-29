@@ -3,10 +3,6 @@ import { fetchClients, fetchClient, documentSession } from "../../services/api";
 import StatusBadge from "../Shared/StatusBadge";
 import LoadingState from "../Shared/LoadingState";
 
-const DEMO_NOTES = {
-  "client-001": `Marcus came in agitated today. Said his boss gave him a written warning on Friday. Couldn't sleep all weekend. He went to the bar parking lot on Saturday night but says he didn't go in — called his sponsor after and talked for 30 minutes. Only went to 1 meeting this week. He's angry — at his boss, at himself. We talked about how anger is a trigger for him. Did a safety check — no SI, but he said 'what's the point of all this if I'm gonna lose my job anyway.' We rebuilt his crisis plan and updated his trigger list.`,
-  "client-002": `Sarah is having a good week. Hit 60 days at work — she's proud. Anxiety is less frequent, maybe 2-3 times a week instead of daily. Weekly calls with Rachel are happening. She brought up wanting to go back to community college in the fall for graphic design. NA attendance steady at 2x/week. She's made a friend in the women's group named Kesha. Suboxone still 100%. No cravings.`,
-};
 
 export default function SessionDoc({ clientId, onBack, onViewClient }) {
   const [clients, setClients] = useState([]);
@@ -28,7 +24,7 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
   useEffect(() => {
     if (activeClientId) {
       fetchClient(activeClientId).then(setSelectedClient).catch(console.error);
-      setRawNotes(DEMO_NOTES[activeClientId] || "");
+      setRawNotes("");
       setResult(null);
       setError(null);
       setSaved(false);
@@ -205,7 +201,7 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
               opacity: (!rawNotes.trim() || !activeClientId) ? 0.5 : 1,
             }}
           >
-            {loading ? "⏳ Generating documentation..." : "Generate Clinical Documentation"}
+            {loading ? "Generating documentation..." : "Generate Clinical Documentation"}
           </button>
         </div>
 
@@ -235,15 +231,16 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
                 background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)",
                 fontSize: "13px", fontWeight: 500, color: "var(--accent-amber)",
               }}>
-                <span>✏️</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 AI-generated draft — review and edit before finalizing
               </div>
 
               {/* Editable DAP Note */}
               <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>
-                    📋 DAP Note — Session {result.sessionNumber}
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    DAP Note — Session {result.sessionNumber}
                   </h3>
                   {saved && (
                     <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--accent-emerald)", padding: "4px 10px", borderRadius: "100px", background: "rgba(16,185,129,0.1)" }}>
@@ -308,7 +305,9 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
 
               {/* Clinical Tags */}
               <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
-                <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "16px" }}>🏷️ Clinical Tags</h3>
+                <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                  Clinical Tags</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
                   <TagRow label="Mood" items={result.tags.moodIndicators} color="var(--accent-indigo)" bg="rgba(99,102,241,0.1)" />
                   <TagRow label="Triggers" items={result.tags.triggersIdentified} color="var(--accent-amber)" bg="rgba(245,158,11,0.1)" />
@@ -354,14 +353,17 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
 
               {/* Follow-up Flags */}
               <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
-                <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>🚩 Follow-up Flags</h3>
+                <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                  Follow-up Flags
+                </h3>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
                   {result.followUpFlags.map((flag, i) => {
                     const isPriority = flag.startsWith("PRIORITY:") || flag.startsWith("URGENT:");
                     return (
                       <li key={i} style={{ fontSize: "13px", display: "flex", alignItems: "flex-start", gap: "10px", padding: "4px 0" }}>
                         <span style={{ color: isPriority ? "var(--accent-rose)" : "var(--accent-indigo)", flexShrink: 0 }}>
-                          {isPriority ? "🔴" : "→"}
+                          {isPriority ? "●" : "→"}
                         </span>
                         <span style={{ color: isPriority ? "var(--accent-rose)" : "var(--text-secondary)", fontWeight: isPriority ? 600 : 400 }}>
                           {flag}
@@ -375,7 +377,10 @@ export default function SessionDoc({ clientId, onBack, onViewClient }) {
               {/* Key Quotes */}
               {result.tags.keyQuotes?.length > 0 && (
                 <div style={{ background: "var(--nm-bg)", boxShadow: "var(--nm-flat)", borderRadius: "20px", padding: "24px" }}>
-                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px" }}>💬 Key Client Statements</h3>
+                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    Key Client Statements
+                  </h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {result.tags.keyQuotes.map((q, i) => (
                       <blockquote key={i} className="quote">"{q}"</blockquote>
