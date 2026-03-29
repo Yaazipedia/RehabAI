@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { login } from "../../services/api";
 
 export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("rivera@rehab.com"); // Prefilled for hackathon
+  const [password, setPassword] = useState("password"); // Prefilled for hackathon
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [spinToggle, setSpinToggle] = useState(false);
+
+  // When switching modes, clear error and adjust initial values
+  useEffect(() => {
+    setError("");
+    if (isSignUp) {
+      setEmail("");
+      setPassword("");
+    } else {
+      // Re-fill dummy credentials on standard Sign In
+      setEmail("rivera@rehab.com");
+      setPassword("password");
+    }
+  }, [isSignUp]);
 
   function handleToggleDark() {
     setSpinToggle(true);
@@ -19,6 +34,14 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
     setError("");
     setSubmitting(true);
     try {
+      if (isSignUp) {
+        // Enforce the hackathon dummy rule frontend-side for clarity
+        if (!email.toLowerCase().endsWith("@rehabiq.com") && !email.toLowerCase().endsWith("@rehab.com")) {
+          throw new Error("Demo signups require a @rehabiq.com or @rehab.com email address.");
+        }
+      }
+      
+      // Both sign-up and sign-in hit the same logic now thanks to the backend hackathon bypass
       await login(email.trim(), password);
       onLoggedIn();
     } catch (err) {
@@ -51,7 +74,7 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
           "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(82, 183, 136, 0.12), transparent)",
       }}
     >
-      {/* Theme toggle — same interaction as Header */}
+      {/* Theme toggle */}
       <div style={{ position: "absolute", top: "20px", right: "24px", zIndex: 10 }}>
         <button
           type="button"
@@ -92,7 +115,50 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
       </div>
 
       <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <div style={{ width: "100%", maxWidth: "400px" }}>
+        <div style={{ width: "100%", maxWidth: "420px" }}>
+          
+          {/* Mode Toggle Tabs */}
+          <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+            <button
+              onClick={() => setIsSignUp(false)}
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "12px",
+                border: "none",
+                fontWeight: 600,
+                fontSize: "14px",
+                cursor: "pointer",
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                background: !isSignUp ? "var(--bg-card)" : "transparent",
+                color: !isSignUp ? "var(--green-dark)" : "var(--text-muted)",
+                boxShadow: !isSignUp ? "var(--card-shadow)" : "none",
+                transition: "all 0.2s ease",
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsSignUp(true)}
+              style={{
+                flex: 1,
+                padding: "10px",
+                borderRadius: "12px",
+                border: "none",
+                fontWeight: 600,
+                fontSize: "14px",
+                cursor: "pointer",
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                background: isSignUp ? "var(--bg-card)" : "transparent",
+                color: isSignUp ? "var(--green-dark)" : "var(--text-muted)",
+                boxShadow: isSignUp ? "var(--card-shadow)" : "none",
+                transition: "all 0.2s ease",
+              }}
+            >
+              Sign Up
+            </button>
+          </div>
+
           <div
             style={{
               borderRadius: "16px",
@@ -102,7 +168,7 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
               padding: "28px 28px 32px",
             }}
           >
-            {/* Brand — aligned with Sidebar lockup, adapted for light card */}
+            {/* Brand */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
               <div
                 style={{
@@ -136,7 +202,7 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
                   RehabIQ
                 </div>
                 <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 400, marginTop: "2px" }}>
-                  Counselor sign in
+                  Clinical Suite
                 </div>
               </div>
             </div>
@@ -150,13 +216,48 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
                 marginBottom: "6px",
               }}
             >
-              Welcome back
+              {isSignUp ? "Create new account" : "Welcome back"}
             </h1>
             <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "22px", lineHeight: 1.45 }}>
-              Sign in with your demo counselor account to open the clinical suite.
+              {isSignUp ? "Register as a practitioner using your @rehabiq.com address." : "Sign in with your demo counselor account to open the clinical suite."}
             </p>
 
             <form onSubmit={handleSubmit}>
+              {isSignUp && (
+                <>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "var(--text-secondary)",
+                      marginBottom: "6px",
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                    }}
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Dr. Jane Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    disabled={submitting}
+                    style={{ ...inputStyle, marginBottom: "16px" }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "var(--green-accent)";
+                      e.target.style.boxShadow = "0 0 0 3px rgba(82, 183, 136, 0.2)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "var(--clr-border)";
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </>
+              )}
+
               <label
                 style={{
                   display: "block",
@@ -174,6 +275,7 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder={isSignUp ? "name@rehabiq.com" : ""}
                 required
                 disabled={submitting}
                 style={inputStyle}
@@ -202,7 +304,7 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
               </label>
               <input
                 type="password"
-                autoComplete="current-password"
+                autoComplete={isSignUp ? "new-password" : "current-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -261,7 +363,7 @@ export default function Login({ onLoggedIn, darkMode, onToggleDark }) {
                   e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                {submitting ? "Signing in…" : "Sign in"}
+                {submitting ? (isSignUp ? "Creating account…" : "Signing in…") : (isSignUp ? "Sign up" : "Sign in")}
               </button>
             </form>
           </div>

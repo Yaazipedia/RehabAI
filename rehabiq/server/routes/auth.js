@@ -18,16 +18,21 @@ router.post("/login", (req, res) => {
   const expectedEmail = (process.env.COUNSELOR_EMAIL || "").trim();
   const expectedPassword = process.env.COUNSELOR_PASSWORD != null ? String(process.env.COUNSELOR_PASSWORD) : "";
 
-  if (!expectedEmail || !expectedPassword) {
-    console.error("Auth: COUNSELOR_EMAIL and COUNSELOR_PASSWORD must be set in .env");
-    return res.status(500).json({ error: "Server authentication is not configured" });
-  }
+  // Hackathon bypass: Accept any email ending in @rehabiq.com or @rehab.com as a valid sign-up/login
+  const isHackathonSignup = email.toLowerCase().endsWith("@rehabiq.com") || email.toLowerCase().endsWith("@rehab.com");
 
-  const emailOk = safeEqualString(email, expectedEmail);
-  const passwordOk = safeEqualString(password, expectedPassword);
+  if (!isHackathonSignup) {
+    if (!expectedEmail || !expectedPassword) {
+      console.error("Auth: COUNSELOR_EMAIL and COUNSELOR_PASSWORD must be set in .env");
+      return res.status(500).json({ error: "Server authentication is not configured" });
+    }
 
-  if (!emailOk || !passwordOk) {
-    return res.status(401).json({ error: "Invalid email or password" });
+    const emailOk = safeEqualString(email, expectedEmail);
+    const passwordOk = safeEqualString(password, expectedPassword);
+
+    if (!emailOk || !passwordOk) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
   }
 
   req.session.authenticated = true;
