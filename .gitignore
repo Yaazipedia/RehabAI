@@ -1,6 +1,7 @@
 node_modules/
 .env
 *.db
+!rehabiq/server/data/rehabiq.db
 *.db-journal
 *.db-shm
 *.db-wal
