@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fetchClients } from "../../services/api";
+import { fetchClients, fetchClient } from "../../services/api";
 import StatusBadge from "../Shared/StatusBadge";
 
 /* ── CountUp ──────────────────────────────────────────────── */
@@ -232,33 +232,182 @@ function LogLine({ text, color, delay }) {
   );
 }
 
-/* ── Export CSV helper ────────────────────────────────────── */
-function exportClientsCSV(clients) {
-  const headers = [
-    "Name", "Age", "Gender", "Diagnosis", "Program Type",
-    "Program Day", "Risk Level", "Total Sessions", "Last Session Sentiment"
-  ];
-  const rows = clients.map(c => [
-    c.name, c.age, c.gender, c.diagnosis, c.programType,
-    c.programDay, c.riskLevel, c.totalSessions, c.lastSessionSentiment
-  ]);
-  const csv = [headers, ...rows]
-    .map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
-    .join("\n");
+/* ── PII pseudo-anonymization helpers ────────────────────── */
+// Simple deterministic hash for consistent pseudonymization (not cryptographic)
+function pseudoHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return `PT-${Math.abs(h).toString(16).toUpperCase().padStart(6, "0")}`;
+}
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `rehabiq-caseload-${new Date().toISOString().split("T")[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+function maskPII(client) {
+  return {
+    clientRef: pseudoHash(client.id + client.name),
+    ageGroup: client.age < 25 ? "18-24" : client.age < 35 ? "25-34" : client.age < 45 ? "35-44" : "45+",
+    gender: client.gender,
+    diagnosis: client.diagnosis,
+    coOccurring: client.coOccurring || null,
+    programType: client.programType,
+    programDay: client.programDay,
+    riskLevel: client.riskLevel,
+    mat: client.mat ? "[ON MAT]" : null,
+    insurance: client.insurance ? "[REDACTED]" : null,
+    emergencyContact: client.emergencyContact ? "[REDACTED]" : null,
+    admissionDate: client.admissionDate,
+    totalSessions: client.totalSessions,
+    lastSessionSentiment: client.lastSessionSentiment,
+    treatmentPlan: client.treatmentPlan,
+    sessions: (client.sessions || []).map(s => ({
+      sessionNumber: s.sessionNumber,
+      date: s.date,
+      dapNote: s.dapNote,
+      tags: {
+        ...s.tags,
+        // Remove any free-text that might contain names
+        keyQuotes: s.tags?.keyQuotes?.map(q => q.replace(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g, "[NAME]")) || [],
+      },
+      followUpFlags: s.followUpFlags,
+    })),
+    exportMeta: {
+      exportedAt: new Date().toISOString(),
+      exportedBy: "Dr. Rivera",
+      note: "PII has been pseudonymized. Client name replaced with reference ID. Age generalized. Insurance and emergency contact redacted.",
+    },
+  };
+}
+
+/* ── Export Modal ─────────────────────────────────────────── */
+function ExportModal({ clients, onClose }) {
+  const [selectedId, setSelectedId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function handleExport() {
+    if (!selectedId) return;
+    setLoading(true);
+    try {
+      const full = await fetchClient(selectedId);
+      const masked = maskPII(full);
+      const json = JSON.stringify(masked, null, 2);
+      const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rehabiq-${masked.clientRef}-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDone(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 200,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)",
+    }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{
+        width: "480px", maxWidth: "94vw",
+        background: "var(--nm-bg)",
+        borderRadius: "24px",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.22), var(--nm-flat-lg)",
+        padding: "32px",
+        animation: "fadeInUp 0.25s ease",
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "20px" }}>
+          <div>
+            <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-primary)", margin: "0 0 4px" }}>Export Patient Data</h3>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>Full session history including DAP notes</p>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "20px", color: "var(--text-muted)", lineHeight: 1 }}>✕</button>
+        </div>
+
+        {/* PII notice */}
+        <div style={{
+          borderRadius: "12px", padding: "14px 16px", marginBottom: "20px",
+          background: "rgba(99,102,241,0.08)",
+          border: "1.5px solid rgba(99,102,241,0.2)",
+          fontSize: "12px", color: "var(--accent-indigo)", lineHeight: 1.6,
+        }}>
+          <strong>🔒 Privacy Protected:</strong> The exported file will automatically pseudonymize PII.
+          Patient name → anonymized reference ID, age → age group, insurance & emergency contact → redacted.
+          Free-text quotes are scanned for names.
+        </div>
+
+        {/* Client selector */}
+        <label style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-muted)", display: "block", marginBottom: "8px" }}>
+          Select Patient
+        </label>
+        <select
+          value={selectedId}
+          onChange={e => { setSelectedId(e.target.value); setDone(false); }}
+          className="input-base"
+          style={{ marginBottom: "20px" }}
+        >
+          <option value="">Choose a patient...</option>
+          {clients.map(c => (
+            <option key={c.id} value={c.id}>
+              {c.name} — {c.diagnosis} ({c.totalSessions} sessions)
+            </option>
+          ))}
+        </select>
+
+        {/* What's included */}
+        {selectedId && (
+          <div style={{
+            borderRadius: "12px", padding: "14px 16px", marginBottom: "20px",
+            background: "var(--nm-bg)", boxShadow: "var(--nm-inset-sm)",
+            fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.8,
+          }}>
+            <strong style={{ color: "var(--text-primary)", display: "block", marginBottom: "6px" }}>JSON file will include:</strong>
+            ✓ All session records with full DAP notes<br />
+            ✓ Clinical tags (mood, triggers, coping, sentiment)<br />
+            ✓ Follow-up flags and risk indicators<br />
+            ✓ Treatment plan objectives & progress<br />
+            ✓ Anonymized reference ID (name removed)<br />
+            ✗ Name, exact age, insurance, emergency contact (redacted)
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={onClose} style={{
+            flex: 1, padding: "12px", borderRadius: "12px",
+            border: "none", background: "var(--nm-bg)", boxShadow: "var(--nm-button)",
+            fontFamily: "inherit", fontSize: "14px", color: "var(--text-secondary)", fontWeight: 500, cursor: "pointer",
+          }}>Cancel</button>
+          <button
+            onClick={handleExport}
+            disabled={!selectedId || loading}
+            style={{
+              flex: 2, padding: "12px", borderRadius: "12px",
+              border: "none",
+              background: done ? "var(--gradient-emerald)" : "var(--gradient-indigo)",
+              color: "white", fontFamily: "inherit", fontSize: "14px", fontWeight: 600,
+              cursor: selectedId && !loading ? "pointer" : "not-allowed",
+              opacity: !selectedId ? 0.5 : 1,
+              boxShadow: done ? "0 4px 14px rgba(16,185,129,0.3)" : "0 4px 14px rgba(99,102,241,0.3)",
+              transition: "all 0.2s ease",
+            }}
+          >
+            {loading ? "Preparing export..." : done ? "✓ Downloaded!" : "Export & Download"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ── Main Dashboard ───────────────────────────────────────── */
 export default function Dashboard({ onSelectClient, onDocumentSession, onAddClient, searchQuery = "" }) {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
     fetchClients().then(setClients).catch(console.error).finally(() => setLoading(false));
@@ -473,7 +622,7 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
           label="Export Data"
           icon={<DownloadIcon />}
           gradient="var(--gradient-amber)"
-          onClick={() => exportClientsCSV(clients)}
+          onClick={() => setShowExportModal(true)}
         />
       </div>
 
@@ -690,6 +839,9 @@ export default function Dashboard({ onSelectClient, onDocumentSession, onAddClie
           </div>
         </div>
       </div>
+      {showExportModal && (
+        <ExportModal clients={clients} onClose={() => setShowExportModal(false)} />
+      )}
     </div>
   );
 }
